@@ -5,6 +5,9 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.frogs42.cookbook.fragments.TimersListFragment;
+import com.frogs42.cookbook.utils.TimersManager;
+
 
 public class MainActivity extends ActionBarActivity {
 
@@ -12,6 +15,9 @@ public class MainActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // init helpers
+        TimersManager.init(this);
     }
 
 
@@ -30,10 +36,17 @@ public class MainActivity extends ActionBarActivity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_timers) {
+            getSupportFragmentManager().beginTransaction().replace(R.id.fragments_container, new TimersListFragment()).commit();
             return true;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onDestroy() {
+        TimersManager.terminate();
+        super.onDestroy();
     }
 }
