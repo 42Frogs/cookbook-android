@@ -1,8 +1,12 @@
 package com.frogs42.cookbook.utils;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.os.Handler;
 import android.os.Looper;
+
+import com.frogs42.cookbook.R;
 
 import java.util.ArrayList;
 
@@ -48,9 +52,10 @@ public class TimersManager implements CookTimer.CookTimerListener {
 
     @Override
     public void onFinish(final CookTimer caller) {
-        // TODO: add hiring popup window
         mTimersContainer.remove(caller);
         notifyDataChanged();
+        showTimerFinishedPopup(caller);
+        caller.removeListener(this);
     }
 
     public static void addDataListener(DataListener listener) {
@@ -75,5 +80,21 @@ public class TimersManager implements CookTimer.CookTimerListener {
 
     public static CookTimer getTimer(int index) {
         return sInstance.mTimersContainer.get(index);
+    }
+
+    private void showTimerFinishedPopup(CookTimer timer) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
+        builder.setTitle(R.string.timer_done_dialog_title)
+                .setMessage(timer.getTitle())
+                .setCancelable(false)
+                .setPositiveButton(R.string.timer_done_dialog_button_text, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                    }
+                });
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
     }
 }

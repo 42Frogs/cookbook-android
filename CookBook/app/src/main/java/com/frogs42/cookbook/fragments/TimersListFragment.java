@@ -36,4 +36,10 @@ public class TimersListFragment extends Fragment {
 
         return mView;
     }
+
+    @Override
+    public void onDestroy() {
+        TimersManager.removeDataListener(mAdapter);
+        super.onDestroy();
+    }
 }

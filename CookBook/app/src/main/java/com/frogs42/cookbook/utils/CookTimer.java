@@ -29,11 +29,11 @@ public class CookTimer {
         mInnerTimer = new CountDownTimer(seconds * 1000, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
+                --mRemainingSeconds;
                 Handler handler = new Handler(mContext.getMainLooper());
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
-                        --mRemainingSeconds;
                         if (mTimerListener != null)
                             mTimerListener.onTick(CookTimer.this);
                     }
@@ -46,8 +46,9 @@ public class CookTimer {
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
-                        if (mTimerListener != null)
+                        if (mTimerListener != null) {
                             mTimerListener.onFinish(CookTimer.this);
+                        }
                     }
                 });
             }
