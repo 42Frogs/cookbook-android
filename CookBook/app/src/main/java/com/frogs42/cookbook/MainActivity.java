@@ -2,10 +2,12 @@ package com.frogs42.cookbook;
 
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
 import com.frogs42.cookbook.fragments.TimersListFragment;
+import com.frogs42.cookbook.utils.EventsManager;
 import com.frogs42.cookbook.utils.TimersManager;
 
 
@@ -17,6 +19,7 @@ public class MainActivity extends ActionBarActivity {
         setContentView(R.layout.activity_main);
 
         // init helpers
+        EventsManager.init(this);
         TimersManager.init(this);
     }
 
@@ -47,6 +50,7 @@ public class MainActivity extends ActionBarActivity {
     @Override
     public void onDestroy() {
         TimersManager.terminate();
+        EventsManager.terminate();
         super.onDestroy();
     }
 }
