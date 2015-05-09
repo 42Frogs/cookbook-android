@@ -23,10 +23,10 @@ public class CookBookProvider  extends ContentProvider {
 
     static UriMatcher buildUriMatcher() {
         UriMatcher uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
-        uriMatcher.addURI(Contract.CONTENT_AUTHORITY, Contract.RecipeEntry.CONTENT_URI + "/#",RECIPE);
-        uriMatcher.addURI(Contract.CONTENT_AUTHORITY, Contract.RecipeIngredientEntry.CONTENT_URI + "/#",RECIPE_INGREDIENT);
-        uriMatcher.addURI(Contract.CONTENT_AUTHORITY, Contract.StepEntry.CONTENT_URI + "/#",STEP);
-        uriMatcher.addURI(Contract.CONTENT_AUTHORITY, Contract.StepStepEntry.CONTENT_URI + "/#",STEP_PARENTS);
+        uriMatcher.addURI(Contract.CONTENT_AUTHORITY, Contract.PATH_RECIPE + "/#",RECIPE);
+        uriMatcher.addURI(Contract.CONTENT_AUTHORITY, Contract.PATH_RECIPE_INGREDIENT + "/#",RECIPE_INGREDIENT);
+        uriMatcher.addURI(Contract.CONTENT_AUTHORITY, Contract.PATH_STEP + "/#",STEP);
+        uriMatcher.addURI(Contract.CONTENT_AUTHORITY, Contract.PATH_STEP_STEP + "/#",STEP_PARENTS);
         return uriMatcher;
     }
 

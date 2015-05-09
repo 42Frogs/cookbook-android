@@ -1,6 +1,5 @@
 package com.frogs42.cookbook.data;
 
-import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.net.Uri;
 import android.provider.BaseColumns;
@@ -9,7 +8,7 @@ import android.provider.BaseColumns;
  * Created by ilia on 07.05.15.
  */
 public class Contract {
-    public static final String CONTENT_AUTHORITY = "com.frog42.cookbook";
+    public static final String CONTENT_AUTHORITY = "com.frogs42.cookbook";
 
     public static final Uri BASE_CONTENT_URI = Uri.parse("content://" + CONTENT_AUTHORITY);
 

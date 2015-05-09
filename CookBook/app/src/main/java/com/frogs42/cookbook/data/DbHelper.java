@@ -50,10 +50,10 @@ public class DbHelper extends SQLiteOpenHelper {
                 "FOREIGN KEY(" + RecipeIngredientEntry.INGREDIENT_ID + ") REFERENCES " + IngredientEntry.TABLE_NAME + "(" + IngredientEntry._ID + "));";
         final String SQL_CREATE_STEP = "CREATE TABLE " + StepEntry.TABLE_NAME + " (" +
                 StepEntry._ID + " INTEGER NOT NULL, " +
-                StepEntry.NAME + " varchar(255) NOT NULL, " +
                 StepEntry.DESCRIPTION + " varchar(255) NOT NULL, " +
                 StepEntry.RECIPE_ID + " bigint(19) NOT NULL, " +
                 StepEntry.TIMER + " integer(10), " +
+                StepEntry.NAME + " varchar(255) NOT NULL, " +
                 StepEntry.IMAGE_PATH + " varchar(255), " +
                 "PRIMARY KEY (" + StepEntry._ID + "), " +
                 "FOREIGN KEY(" + StepEntry.RECIPE_ID + ") REFERENCES " + RecipeEntry.TABLE_NAME + "(" + RecipeEntry._ID + "));";
@@ -73,6 +73,8 @@ public class DbHelper extends SQLiteOpenHelper {
         sqLiteDatabase.execSQL(SQL_CREATE_RECIPE);
         sqLiteDatabase.execSQL(SQL_CREATE_RECIPE_INGREDIENT);
         sqLiteDatabase.execSQL(SQL_CREATE_STEP_STEP);
+        for(String s : getBorschSQL())
+            sqLiteDatabase.execSQL(s);
     }
 
     @Override
@@ -84,5 +86,61 @@ public class DbHelper extends SQLiteOpenHelper {
         sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + StepStepEntry.TABLE_NAME + ";");
         sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + StepEntry.TABLE_NAME + ";");
         onCreate(sqLiteDatabase);
+    }
+
+    private String[] getBorschSQL(){
+        return new String[]{
+                "INSERT INTO recipe VALUES(1,'Борщ с курицей',NULL,NULL,0,1);",
+                        "INSERT INTO ingredient VALUES(1,'Свекла');",
+                        "INSERT INTO ingredient VALUES(2,'Курица');",
+                        "INSERT INTO ingredient VALUES(3,'Картофель');",
+                        "INSERT INTO ingredient VALUES(4,'Белокочанная капуста');",
+                        "INSERT INTO ingredient VALUES(5,'Лук репчатый');",
+                        "INSERT INTO ingredient VALUES(6,'Морковь');",
+                        "INSERT INTO ingredient VALUES(7,'Чеснок');",
+                        "INSERT INTO ingredient VALUES(8,'Сметана');",
+                        "INSERT INTO ingredient VALUES(9,'Томатная паста');",
+                        "INSERT INTO recipe_ingredient VALUES(1,1,1,'шт');",
+                        "INSERT INTO recipe_ingredient VALUES(1,2,600,'г');",
+                        "INSERT INTO recipe_ingredient VALUES(1,3,4,'шт');",
+                        "INSERT INTO recipe_ingredient VALUES(1,4,200,'г');",
+                        "INSERT INTO recipe_ingredient VALUES(1,5,1,'шт');",
+                        "INSERT INTO recipe_ingredient VALUES(1,6,2,'шт');",
+                        "INSERT INTO recipe_ingredient VALUES(1,7,4,'зубка');",
+                        "INSERT INTO recipe_ingredient VALUES(1,8,0,'по вкусу');",
+                        "INSERT INTO recipe_ingredient VALUES(1,9,1,'столовая ложка');",
+                        "INSERT INTO category VALUES(1,'Первое');",
+                        "INSERT INTO step VALUES(1,'Курицу разморозить',1,NULL,'Курицу разморозить',NULL);",
+                        "INSERT INTO step VALUES(2,'Нарезать картошку',1,NULL,'Нарезать картошку',NULL);",
+                        "INSERT INTO step VALUES(3,'Капусту нашинковать',1,NULL,'Капусту нашинковать',NULL);",
+                        "INSERT INTO step VALUES(4,'Свеклу натереть на терке',1,NULL,'Свеклу (крупную) натереть на терке',NULL);",
+                        "INSERT INTO step VALUES(5,'Морковь натереть на терке',1,NULL,'Морковь натереть на терке',NULL);",
+                        "INSERT INTO step VALUES(6,'Лук мелко порезать',1,NULL,'Лук мелко порезать',NULL);",
+                        "INSERT INTO step VALUES(7,'Раздавить чеснок',1,NULL,'Раздавить чеснок',NULL);",
+                        "INSERT INTO step VALUES(8,'Курицу разделить на части и поставить варить. Посолить бульон. Ждать, пока закипит',1,600,'Курицу разделить на части и поставить варить. Посолить бульон. Ждать, пока закипит',NULL);",
+                        "INSERT INTO step VALUES(9,'Добавить картошку',1,NULL,'Добавить картошку',NULL);",
+                        "INSERT INTO step VALUES(10,'Капусту добавить в бульон',1,NULL,'Капусту добавить в бульон',NULL);",
+                        "INSERT INTO step VALUES(11,'Обжарить в подсолнечном масле 5 минут',1,300,'Обжарить в подсолнечном масле 5 минут',NULL);",
+                        "INSERT INTO step VALUES(12,' Ждать пока картошка станет мягкой',1,300,' Ждать пока картошка станет мягкой',NULL);",
+                        "INSERT INTO step VALUES(13,'Вложить томатную пасту',1,NULL,'Вложить томатную пасту',NULL);",
+                        "INSERT INTO step VALUES(14,' Как только картошка стала мягкой, добавить заправку',1,NULL,' Как только картошка стала мягкой, добавить заправку',NULL);",
+                        "INSERT INTO step VALUES(15,'Оставить еще на 3–5 минут',1,240,'Оставить еще на 3–5 минут',NULL);",
+                        "INSERT INTO step VALUES(16,' При подаче на стол добавить сметаны, можно украсить зеленью',1,NULL,' При подаче на стол добавить сметаны, можно украсить зеленью',NULL);",
+                        "INSERT INTO step_step VALUES(1,8);",
+                        "INSERT INTO step_step VALUES(2,9);",
+                        "INSERT INTO step_step VALUES(3,10);",
+                        "INSERT INTO step_step VALUES(4,11);",
+                        "INSERT INTO step_step VALUES(5,11);",
+                        "INSERT INTO step_step VALUES(6,11);",
+                        "INSERT INTO step_step VALUES(7,11);",
+                        "INSERT INTO step_step VALUES(9,12);",
+                        "INSERT INTO step_step VALUES(11,13);",
+                        "INSERT INTO step_step VALUES(8,9);",
+                        "INSERT INTO step_step VALUES(12,14);",
+                        "INSERT INTO step_step VALUES(13,14);",
+                        "INSERT INTO step_step VALUES(14,15);",
+                        "INSERT INTO step_step VALUES(15,16);",
+                        "INSERT INTO step_step VALUES(8,10);"
+        };
     }
 }
