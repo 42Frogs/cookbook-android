@@ -6,13 +6,20 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.frogs42.cookbook.data.Contract;
+import com.frogs42.cookbook.data.DbAdapter;
+import com.frogs42.cookbook.fragments.CookingFragment;
 import com.frogs42.cookbook.fragments.TimersListFragment;
+import com.frogs42.cookbook.model.IngredientEntry;
+import com.frogs42.cookbook.model.Recipe;
+import com.frogs42.cookbook.model.RecipeStep;
 import com.frogs42.cookbook.utils.EventsManager;
 import com.frogs42.cookbook.utils.TimersManager;
 
 
 public class MainActivity extends ActionBarActivity {
 
+    Recipe recipe;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -21,6 +28,18 @@ public class MainActivity extends ActionBarActivity {
         // init helpers
         EventsManager.init(this);
         TimersManager.init(this);
+
+        recipe = DbAdapter.getRecipe(this, 1);
+        if(recipe != null) {
+            Log.e("name", recipe.getTitle());
+            for(IngredientEntry i : recipe.getIngredients())
+                Log.e("ingredient",i.getIngredient().getName() + " " + i.getAmount() + " " + i.getMeasure());
+            for(RecipeStep step : recipe.getRecipeSteps()) {
+                Log.e("step", step.getTitle() + " ");
+                for(RecipeStep s : step.getParentSteps())
+                    Log.e("parent",s.getTitle());
+            }
+        }else Log.e("recipe","is null");
     }
 
 
@@ -41,6 +60,10 @@ public class MainActivity extends ActionBarActivity {
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_timers) {
             getSupportFragmentManager().beginTransaction().replace(R.id.fragments_container, new TimersListFragment()).commit();
+            return true;
+        }
+        if (id == R.id.action_recipe) {
+            getSupportFragmentManager().beginTransaction().replace(R.id.fragments_container, new CookingFragment().setRecipe(recipe)).commit();
             return true;
         }
 

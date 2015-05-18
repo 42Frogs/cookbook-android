@@ -4,5 +4,6 @@
 
     <item android:id="@+id/action_timers" android:title="@string/action_timers"
         android:orderInCategory="100" app:showAsAction="never" />
-
+    <item android:id="@+id/action_recipe" android:title="@string/action_recipe"
+        android:orderInCategory="100" app:showAsAction="never" />
 </menu>
