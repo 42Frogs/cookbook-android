@@ -2,6 +2,7 @@ package com.frogs42.cookbook.adapters;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,16 +15,14 @@ import com.frogs42.cookbook.model.RecipeStep;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Objects;
 
 /**
  * Created by ilia on 16.05.15.
  */
 public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
-    private static LinkedHashMap<RecipeStep,Integer> progress;
+    private static Progress progress;
+    private Recipe recipe;
     private final static int AVAILABLE = 0;
     private final static int UNAVAILABLE = 1;
     private final static int COMPLETED = 2;
@@ -33,62 +32,76 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
     private Context mContext;
     private static CookingAdapter adapter;
+    private ViewUpdater viewUpdater;
 
     public CookingAdapter(Context context,Recipe recipe){
         adapter = this;
         mContext = context;
-        progress = new LinkedHashMap<>();
+        progress = new Progress(recipe.getRecipeSteps());
+        this.recipe = recipe;
 
-        for(RecipeStep step : recipe.getRecipeSteps())
-            progress.put(step,AVAILABLE);
-
-        for(RecipeStep step : recipe.getRecipeSteps())
+        for(RecipeStep step : recipe.getRecipeSteps()) {
+            boolean parent_completed = true;
             for (RecipeStep parent : step.getParentSteps())
-                if (!progress.get(parent).equals(COMPLETED)) {
-                    progress.put(step, UNAVAILABLE);
+                if (!progress.getStatus(parent).equals(COMPLETED)) {
+                    parent_completed = false;
                     break;
                 }
-        sort(progress);
+            if(parent_completed) progress.addStatus(AVAILABLE);
+            else progress.addStatus(UNAVAILABLE);
+        }
+        progress.sort();
+
+        registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
+            @Override
+            public void onItemRangeMoved(int fromPosition, int toPosition, int itemCount) {
+                super.onItemRangeMoved(fromPosition, toPosition, itemCount);
+                viewUpdater.updateView(fromPosition);
+            }
+        });
     }
 
-    private void sort(LinkedHashMap<RecipeStep,Integer> map){
+    public void setViewUpdater(ViewUpdater viewUpdater){
+        this.viewUpdater = viewUpdater;
+    }
 
-        Object[] recipeSteps = map.keySet().toArray();
-        for(Object step : recipeSteps)
-            if(map.get(step).equals(UNAVAILABLE)) {
+    private void unlockStep(){
+        for(RecipeStep step : recipe.getRecipeSteps())
+            if(progress.getStatus(step).equals(UNAVAILABLE)) {
                 Integer availability = AVAILABLE;
-                for (RecipeStep parent : ((RecipeStep) step).getParentSteps())
-                    if (!map.get(parent).equals(COMPLETED)) {
+                int parent_position = progress.getNonCompletedCount();
+                for (RecipeStep parent : step.getParentSteps()) {
+                    if (!progress.getStatus(parent).equals(COMPLETED)) {
                         availability = UNAVAILABLE;
                         break;
                     }
+                    int current_index = progress.indexOf(parent);
+                    if (current_index <= parent_position)
+                        parent_position = current_index;
+                }
 
-                map.put((RecipeStep) step,availability);
+                if(availability.equals(AVAILABLE)) {
+                    progress.setStatus(step, availability);
+                    if(parent_position >= 0)
+                        progress.move(step, parent_position);
+                }
             }
-
-        List<LinkedHashMap.Entry<RecipeStep, Integer>> entries = new ArrayList<>(map.entrySet());
-        Collections.sort(entries, new Comparator<LinkedHashMap.Entry<RecipeStep, Integer>>() {
-            public int compare(LinkedHashMap.Entry<RecipeStep, Integer> a, LinkedHashMap.Entry<RecipeStep, Integer> b) {
-                return a.getValue().compareTo(b.getValue());
-            }
-        });
-        map.clear();
-        for (LinkedHashMap.Entry<RecipeStep, Integer> entry : entries) {
-            map.put(entry.getKey(), entry.getValue());
-        }
     }
+
+//    private boolean hasCommonChild(RecipeStep a, RecipeStep b){
+//        Object[] steps = progress.keySet().toArray();
+//        for(Object step : steps) {
+//            ArrayList<RecipeStep> parents = ((RecipeStep) step).getParentSteps();
+//            if (parents.contains(a) && parents.contains(b))
+//                return true;
+//        }
+//        return false;
+//    }
 
     @Override
     public int getItemCount() {
-        if(!progress.containsValue(COMPLETED))
-            return progress.size(); //TODO add header
-
-        int count = 0;
-        Object[] recipeSteps = progress.keySet().toArray();
-        for(Object step : recipeSteps)
-            if(!progress.get(step).equals(COMPLETED))
-                count++;
-
+        int count = progress.getNonCompletedCount();
+        //count++;  //TODO add header
         return count;
     }
 
@@ -111,12 +124,13 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
-        RecipeStep step = (RecipeStep) progress.keySet().toArray()[position];
+        RecipeStep step = progress.getStep(position);
         ((StepsViewHolder) holder).recipeStep = step;
         ((StepsViewHolder) holder).name.setText(step.getTitle());
-        if(progress.get(step).equals(AVAILABLE))
+        Log.e("step",step.getTitle() + " " + String.valueOf(progress.getStatus(step)));
+        if(progress.getStatus(step).equals(AVAILABLE))
             ((StepsViewHolder) holder).name.setTextAppearance(mContext,R.style.available_step);
-        if(progress.get(step).equals(UNAVAILABLE))
+        if(progress.getStatus(step).equals(UNAVAILABLE))
             ((StepsViewHolder) holder).name.setTextAppearance(mContext,R.style.unavailable_step);
     }
 
@@ -129,11 +143,80 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             view.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    progress.put(recipeStep,COMPLETED);
-                    adapter.sort(progress);
-                    adapter.notifyDataSetChanged();
+                    progress.setStatus(recipeStep, COMPLETED);
+                    adapter.unlockStep();
+                    progress.move(recipeStep, progress.getNonCompletedCount());
                 }
             });
         }
+
+
+    }
+
+    private class Progress{
+        private ArrayList<RecipeStep> stepList;
+        private ArrayList<Integer> statusList;
+
+        public Progress(ArrayList<RecipeStep> steps){
+            stepList = new ArrayList<>(steps);
+            statusList = new ArrayList<>();
+        }
+
+        public RecipeStep getStep(int position){
+            return stepList.get(position);
+        }
+
+        public Integer getStatus(RecipeStep step){
+            return statusList.get(stepList.indexOf(step));
+        }
+
+        public void setStatus(RecipeStep step, Integer status){
+            statusList.set(stepList.indexOf(step),status);
+        }
+
+        public void addStatus(Integer status){
+            this.statusList.add(status);
+        }
+
+        public int getNonCompletedCount(){
+            int count = 0;
+            for(Integer i: statusList)
+                if(!i.equals(COMPLETED)) count++;
+            return count;
+        }
+
+        public int indexOf(RecipeStep step){
+            return stepList.indexOf(step);
+        }
+
+        public void move(RecipeStep step, int to){
+            int from = stepList.indexOf(step);
+            stepList.remove(from);
+            stepList.add(to, step);
+
+            Integer status = statusList.get(from);
+            statusList.remove(from);
+            statusList.add(to, status);
+
+            if(!status.equals(COMPLETED))
+                adapter.notifyItemMoved(from,to);
+            else
+                adapter.notifyItemRemoved(from);
+        }
+
+        public void sort(){
+            ArrayList<RecipeStep> tempList = stepList;
+            Collections.sort(tempList, new Comparator<RecipeStep>() {
+                public int compare(RecipeStep a, RecipeStep b) {
+                    return statusList.get(stepList.indexOf(a)).compareTo(statusList.get(stepList.indexOf(b)));
+                }
+            });
+            Collections.sort(statusList);
+            stepList = tempList;
+        }
+    }
+
+    public interface ViewUpdater{
+        void updateView(int position);
     }
 }
