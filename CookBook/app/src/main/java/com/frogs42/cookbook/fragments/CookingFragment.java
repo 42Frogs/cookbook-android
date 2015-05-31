@@ -5,19 +5,14 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import com.frogs42.cookbook.R;
 import com.frogs42.cookbook.adapters.CookingAdapter;
 import com.frogs42.cookbook.model.Recipe;
 
-/**
- * A simple {@link Fragment} subclass.
- */
 public class CookingFragment extends Fragment {
 
     private RecyclerView recyclerView;
@@ -44,16 +39,8 @@ public class CookingFragment extends Fragment {
     }
 
     private void setUpRecyclerView(){
-        CookingAdapter adapter = new CookingAdapter(getActivity(),recipe);
-        adapter.setViewUpdater(new CookingAdapter.ViewUpdater() {
-            @Override
-            public void updateView(int position) {
-                Log.e("view", ((TextView)recyclerView.getChildAt(position).findViewById(R.id.name)).getText().toString());
-                ((TextView)recyclerView.getChildAt(position).findViewById(R.id.name)).setTextAppearance(getActivity(),R.style.available_step);
-            }
-        });
+        final CookingAdapter adapter = new CookingAdapter(getActivity(),recipe);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         recyclerView.setAdapter(adapter);
     }
-
 }

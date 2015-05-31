@@ -32,7 +32,6 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
     private Context mContext;
     private static CookingAdapter adapter;
-    private ViewUpdater viewUpdater;
 
     public CookingAdapter(Context context,Recipe recipe){
         adapter = this;
@@ -51,18 +50,6 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             else progress.addStatus(UNAVAILABLE);
         }
         progress.sort();
-
-        registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
-            @Override
-            public void onItemRangeMoved(int fromPosition, int toPosition, int itemCount) {
-                super.onItemRangeMoved(fromPosition, toPosition, itemCount);
-                viewUpdater.updateView(fromPosition);
-            }
-        });
-    }
-
-    public void setViewUpdater(ViewUpdater viewUpdater){
-        this.viewUpdater = viewUpdater;
     }
 
     private void unlockStep(){
@@ -124,10 +111,11 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+//        Log.e("onBind",String.valueOf(position));
         RecipeStep step = progress.getStep(position);
         ((StepsViewHolder) holder).recipeStep = step;
         ((StepsViewHolder) holder).name.setText(step.getTitle());
-        Log.e("step",step.getTitle() + " " + String.valueOf(progress.getStatus(step)));
+//        Log.e("step",step.getTitle() + " " + String.valueOf(progress.getStatus(step)));
         if(progress.getStatus(step).equals(AVAILABLE))
             ((StepsViewHolder) holder).name.setTextAppearance(mContext,R.style.available_step);
         if(progress.getStatus(step).equals(UNAVAILABLE))
@@ -171,7 +159,7 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         }
 
         public void setStatus(RecipeStep step, Integer status){
-            statusList.set(stepList.indexOf(step),status);
+            statusList.set(stepList.indexOf(step), status);
         }
 
         public void addStatus(Integer status){
@@ -198,8 +186,10 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             statusList.remove(from);
             statusList.add(to, status);
 
-            if(!status.equals(COMPLETED))
-                adapter.notifyItemMoved(from,to);
+            if(!status.equals(COMPLETED)) {
+                adapter.notifyItemMoved(from, to);
+                adapter.notifyItemChanged(to);
+            }
             else
                 adapter.notifyItemRemoved(from);
         }
@@ -214,9 +204,5 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             Collections.sort(statusList);
             stepList = tempList;
         }
-    }
-
-    public interface ViewUpdater{
-        void updateView(int position);
     }
 }
