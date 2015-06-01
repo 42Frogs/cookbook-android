@@ -4,6 +4,7 @@
     <string name="hello_world">Hello world!</string>
     <string name="action_timers">Timers list</string>
     <string name="action_recipe">Recipe</string>
+    <string name="action_recipes_list">Recipes list</string>
 
     <string name="timer_done_dialog_title">Время пришло!</string>
     <string name="timer_done_dialog_button_text">Уже бегу!</string>
