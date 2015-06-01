@@ -1,14 +1,15 @@
 package com.frogs42.cookbook;
 
+import android.app.Fragment;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import com.frogs42.cookbook.data.Contract;
 import com.frogs42.cookbook.data.DbAdapter;
 import com.frogs42.cookbook.fragments.CookingFragment;
+import com.frogs42.cookbook.fragments.RecipesListFragment;
 import com.frogs42.cookbook.fragments.TimersListFragment;
 import com.frogs42.cookbook.model.IngredientEntry;
 import com.frogs42.cookbook.model.Recipe;
@@ -16,10 +17,14 @@ import com.frogs42.cookbook.model.RecipeStep;
 import com.frogs42.cookbook.utils.EventsManager;
 import com.frogs42.cookbook.utils.TimersManager;
 
+import java.util.ArrayList;
+
 
 public class MainActivity extends ActionBarActivity {
 
     Recipe recipe;
+    ArrayList<Recipe> recipesList;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -40,6 +45,8 @@ public class MainActivity extends ActionBarActivity {
                     Log.e("parent",s.getTitle());
             }
         }else Log.e("recipe","is null");
+
+        recipesList = DbAdapter.getRecipesList(this);
     }
 
 
@@ -64,6 +71,10 @@ public class MainActivity extends ActionBarActivity {
         }
         if (id == R.id.action_recipe) {
             getSupportFragmentManager().beginTransaction().replace(R.id.fragments_container, new CookingFragment().setRecipe(recipe)).commit();
+            return true;
+        }
+        if (id == R.id.action_recipes_list) {
+            getSupportFragmentManager().beginTransaction().replace(R.id.fragments_container, new RecipesListFragment().setRecipesList(recipesList)).commit();
             return true;
         }
 

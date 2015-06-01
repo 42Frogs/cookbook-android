@@ -12,6 +12,7 @@ public class Recipe {
     private String mTitle = "";
     private String mDescription = "";
     private String mIcoPath = "";
+    private boolean mFavorite = false;
 
     private ArrayList<IngredientEntry> mIngredients = new ArrayList<>();
     private ArrayList<RecipeStep> mRecipeSteps = new ArrayList<>();
@@ -67,6 +68,15 @@ public class Recipe {
 
     public Recipe addIngredient(IngredientEntry ingredient) {
         mIngredients.add(ingredient);
+        return this;
+    }
+
+    public boolean isFavorite() {
+        return mFavorite;
+    }
+
+    public Recipe setFavorite(boolean favorite) {
+        mFavorite = favorite;
         return this;
     }
 }

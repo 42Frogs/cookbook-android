@@ -2,11 +2,14 @@ package com.frogs42.cookbook.data;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.util.Log;
 
 import com.frogs42.cookbook.model.Ingredient;
 import com.frogs42.cookbook.model.IngredientEntry;
 import com.frogs42.cookbook.model.Recipe;
 import com.frogs42.cookbook.model.RecipeStep;
+
+import java.util.ArrayList;
 
 /**
  * Created by ilia on 08.05.15.
@@ -71,4 +74,24 @@ public class DbAdapter {
         }
         return recipe;
     }
+
+    public static ArrayList<Recipe> getRecipesList(Context context) {
+        ArrayList<Recipe> recipesList = new ArrayList<>();
+
+        Cursor recipeCursor = context.getContentResolver().query(Contract.RecipeEntry.CONTENT_URI, null, null, null, null);
+        if(recipeCursor != null) {
+            for (int i = 0; i < recipeCursor.getCount(); i++) {
+                recipeCursor.moveToPosition(i);
+                Recipe recipe = new Recipe();
+                recipe.setTitle(recipeCursor.getString(recipeCursor.getColumnIndex(Contract.RecipeEntry.NAME)))
+                      .setDescription(recipeCursor.getString(recipeCursor.getColumnIndex(Contract.RecipeEntry.DESCRIPTION)))
+                      .setIcoPath(recipeCursor.getString(recipeCursor.getColumnIndex(Contract.RecipeEntry.IMAGE_PATH)));
+                recipesList.add(recipe);
+            }
+            recipeCursor.close();
+        }
+
+        return recipesList;
+    }
+
 }

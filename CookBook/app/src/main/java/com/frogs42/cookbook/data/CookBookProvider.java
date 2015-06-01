@@ -17,6 +17,7 @@ public class CookBookProvider  extends ContentProvider {
     private DbHelper mOpenHelper;
 
     private static final int RECIPE = 100;
+    private static final int RECIPES = 101;
     private static final int RECIPE_INGREDIENT = 200;
     private static final int STEP = 300;
     private static final int STEP_PARENTS = 400;
@@ -24,6 +25,7 @@ public class CookBookProvider  extends ContentProvider {
     static UriMatcher buildUriMatcher() {
         UriMatcher uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         uriMatcher.addURI(Contract.CONTENT_AUTHORITY, Contract.PATH_RECIPE + "/#",RECIPE);
+        uriMatcher.addURI(Contract.CONTENT_AUTHORITY, Contract.PATH_RECIPE, RECIPES);
         uriMatcher.addURI(Contract.CONTENT_AUTHORITY, Contract.PATH_RECIPE_INGREDIENT + "/#",RECIPE_INGREDIENT);
         uriMatcher.addURI(Contract.CONTENT_AUTHORITY, Contract.PATH_STEP + "/#",STEP);
         uriMatcher.addURI(Contract.CONTENT_AUTHORITY, Contract.PATH_STEP_STEP + "/#",STEP_PARENTS);
@@ -50,6 +52,15 @@ public class CookBookProvider  extends ContentProvider {
                         projection,
                         Contract.RecipeEntry._ID + " = ?",
                         new String[]{uri.getPathSegments().get(1)},
+                        null,
+                        null,
+                        sortOrder);
+                break;
+            case RECIPES:
+                retCursor = mOpenHelper.getReadableDatabase().query(Contract.RecipeEntry.TABLE_NAME,
+                        projection,
+                        null,
+                        null,
                         null,
                         null,
                         sortOrder);
