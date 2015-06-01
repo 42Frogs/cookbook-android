@@ -34,6 +34,8 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     private final int TYPE_HEADER = 0;
     private final int TYPE_STEP = 1;
 
+    private static int expandedPosition = -1;
+
     private Context mContext;
     private static CookingAdapter adapter;
 
@@ -109,6 +111,14 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         if(progress.getStatus(step).equals(UNAVAILABLE))
             ((StepsViewHolder) holder).name.setTextAppearance(mContext,R.style.unavailable_step);
 
+        ((StepsViewHolder) holder).description.setText(step.getDescription());
+
+        if (position == expandedPosition)
+            ((StepsViewHolder) holder).description.setVisibility(View.VISIBLE);
+         else
+            ((StepsViewHolder) holder).description.setVisibility(View.GONE);
+
+
         ((StepsViewHolder) holder).setSwipeItemSlideAmount(0);
     }
 
@@ -145,6 +155,10 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     @Override
     public void onPerformAfterSwipeReaction(StepsViewHolder holder, int position, int result, int reaction) {
         if (reaction == RecyclerViewSwipeManager.AFTER_SWIPE_REACTION_REMOVE_ITEM) {
+
+            if(expandedPosition == position) expandedPosition = -1;
+            if(expandedPosition > position) expandedPosition--;
+
             RecipeStep step = progress.getStep(position);
             progress.setStatus(step, COMPLETED);
             adapter.unlockStep();
@@ -178,6 +192,7 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
     public static class StepsViewHolder extends AbstractSwipeableItemViewHolder {
         public TextView name;
+        public TextView description;
         public RecipeStep recipeStep;
         public ViewGroup mContainer;
 
@@ -185,14 +200,27 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             super(view);
             mContainer = (ViewGroup) view.findViewById(R.id.container);
             name = (TextView) view.findViewById(R.id.name);
-//            view.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//                    progress.setStatus(recipeStep, COMPLETED);
-//                    adapter.unlockStep();
-//                    progress.move(recipeStep, progress.getNonCompletedCount());
-//                }
-//            });
+            description = (TextView) view.findViewById(R.id.description);
+            view.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    int currentPosition = progress.indexOf(recipeStep);
+                    int prevPosition = expandedPosition;
+
+                    if(prevPosition == currentPosition) {
+                        description.setVisibility(View.GONE);
+                        expandedPosition = -1;
+                        adapter.notifyItemChanged(prevPosition);
+                    }
+                    else{
+                        expandedPosition = currentPosition;
+                        if(prevPosition > 0)
+                            adapter.notifyItemChanged(prevPosition);
+                        adapter.notifyItemChanged(expandedPosition);
+                    }
+
+                }
+            });
         }
 
         @Override
