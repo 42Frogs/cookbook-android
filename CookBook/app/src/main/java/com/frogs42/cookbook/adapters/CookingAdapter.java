@@ -11,6 +11,9 @@ import android.widget.TextView;
 import com.frogs42.cookbook.R;
 import com.frogs42.cookbook.model.Recipe;
 import com.frogs42.cookbook.model.RecipeStep;
+import com.h6ah4i.android.widget.advrecyclerview.swipeable.RecyclerViewSwipeManager;
+import com.h6ah4i.android.widget.advrecyclerview.swipeable.SwipeableItemAdapter;
+import com.h6ah4i.android.widget.advrecyclerview.utils.AbstractSwipeableItemViewHolder;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -19,7 +22,8 @@ import java.util.Comparator;
 /**
  * Created by ilia on 16.05.15.
  */
-public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
+        implements SwipeableItemAdapter<CookingAdapter.StepsViewHolder> {
 
     private static Progress progress;
     private Recipe recipe;
@@ -50,29 +54,13 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             else progress.addStatus(UNAVAILABLE);
         }
         progress.sort();
+
+        setHasStableIds(true);
     }
 
-    private void unlockStep(){
-        for(RecipeStep step : recipe.getRecipeSteps())
-            if(progress.getStatus(step).equals(UNAVAILABLE)) {
-                Integer availability = AVAILABLE;
-                int parent_position = progress.getNonCompletedCount();
-                for (RecipeStep parent : step.getParentSteps()) {
-                    if (!progress.getStatus(parent).equals(COMPLETED)) {
-                        availability = UNAVAILABLE;
-                        break;
-                    }
-                    int current_index = progress.indexOf(parent);
-                    if (current_index <= parent_position)
-                        parent_position = current_index;
-                }
-
-                if(availability.equals(AVAILABLE)) {
-                    progress.setStatus(step, availability);
-                    if(parent_position >= 0)
-                        progress.move(step, parent_position);
-                }
-            }
+    @Override
+    public long getItemId(int position) {
+        return progress.getStep(position).getId();
     }
 
 //    private boolean hasCommonChild(RecipeStep a, RecipeStep b){
@@ -120,25 +108,97 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             ((StepsViewHolder) holder).name.setTextAppearance(mContext,R.style.available_step);
         if(progress.getStatus(step).equals(UNAVAILABLE))
             ((StepsViewHolder) holder).name.setTextAppearance(mContext,R.style.unavailable_step);
+
+        ((StepsViewHolder) holder).setSwipeItemSlideAmount(0);
     }
 
-    public static class StepsViewHolder extends RecyclerView.ViewHolder {
+    @Override
+    public void onSetSwipeBackground(StepsViewHolder holder, int position, int type) {
+        int bgRes = 0;
+//        Log.e("background",String.valueOf(position) + " " + String.valueOf(holder.recipeStep.getDurationInSeconds()));
+        if(type == RecyclerViewSwipeManager.DRAWABLE_SWIPE_LEFT_BACKGROUND) {
+            if(holder.recipeStep.getDurationInSeconds() > 0)
+                bgRes = R.drawable.swipe_timer_background;
+            else
+                bgRes = R.drawable.swipe_done_background;
+        }
+        holder.itemView.setBackgroundResource(bgRes);
+    }
+
+    @Override
+    public int onGetSwipeReactionType(StepsViewHolder holder, int position, int x, int y) {
+        return RecyclerViewSwipeManager.REACTION_CAN_SWIPE_LEFT;
+    }
+
+    @Override
+    public int onSwipeItem(StepsViewHolder holder, int position, int result) {
+        if(result == RecyclerViewSwipeManager.RESULT_SWIPED_LEFT) {
+            if(holder.recipeStep.getDurationInSeconds() > 0) {
+                return RecyclerViewSwipeManager.AFTER_SWIPE_REACTION_DEFAULT;
+                //TODO start timer
+            }
+            return RecyclerViewSwipeManager.AFTER_SWIPE_REACTION_REMOVE_ITEM;
+        }
+        return RecyclerViewSwipeManager.AFTER_SWIPE_REACTION_DEFAULT;
+    }
+
+    @Override
+    public void onPerformAfterSwipeReaction(StepsViewHolder holder, int position, int result, int reaction) {
+        if (reaction == RecyclerViewSwipeManager.AFTER_SWIPE_REACTION_REMOVE_ITEM) {
+            RecipeStep step = progress.getStep(position);
+            progress.setStatus(step, COMPLETED);
+            adapter.unlockStep();
+            progress.move(step, progress.getNonCompletedCount());
+        }
+    }
+
+
+    private void unlockStep(){
+        for(RecipeStep step : recipe.getRecipeSteps())
+            if(progress.getStatus(step).equals(UNAVAILABLE)) {
+                Integer availability = AVAILABLE;
+                int parent_position = progress.getNonCompletedCount();
+                for (RecipeStep parent : step.getParentSteps()) {
+                    if (!progress.getStatus(parent).equals(COMPLETED)) {
+                        availability = UNAVAILABLE;
+                        break;
+                    }
+                    int current_index = progress.indexOf(parent);
+                    if (current_index <= parent_position)
+                        parent_position = current_index;
+                }
+
+                if(availability.equals(AVAILABLE)) {
+                    progress.setStatus(step, availability);
+                    if(parent_position >= 0)
+                        progress.move(step, parent_position);
+                }
+            }
+    }
+
+    public static class StepsViewHolder extends AbstractSwipeableItemViewHolder {
         public TextView name;
         public RecipeStep recipeStep;
+        public ViewGroup mContainer;
+
         public StepsViewHolder(View view){
             super(view);
+            mContainer = (ViewGroup) view.findViewById(R.id.container);
             name = (TextView) view.findViewById(R.id.name);
-            view.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    progress.setStatus(recipeStep, COMPLETED);
-                    adapter.unlockStep();
-                    progress.move(recipeStep, progress.getNonCompletedCount());
-                }
-            });
+//            view.setOnClickListener(new View.OnClickListener() {
+//                @Override
+//                public void onClick(View v) {
+//                    progress.setStatus(recipeStep, COMPLETED);
+//                    adapter.unlockStep();
+//                    progress.move(recipeStep, progress.getNonCompletedCount());
+//                }
+//            });
         }
 
-
+        @Override
+        public View getSwipeableContainerView() {
+            return mContainer;
+        }
     }
 
     private class Progress{

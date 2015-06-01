@@ -47,7 +47,8 @@ public class DbAdapter {
                 recipeStep.setId(id)
                         .setTitle(stepsCursor.getString(stepsCursor.getColumnIndex(Contract.StepEntry.NAME)))
                         .setDescription(stepsCursor.getString(stepsCursor.getColumnIndex(Contract.StepEntry.DESCRIPTION)))
-                        .setIcoPath(stepsCursor.getString(stepsCursor.getColumnIndex(Contract.StepEntry.IMAGE_PATH)));
+                        .setIcoPath(stepsCursor.getString(stepsCursor.getColumnIndex(Contract.StepEntry.IMAGE_PATH)))
+                        .setDurationInSeconds(stepsCursor.getInt(stepsCursor.getColumnIndex(Contract.StepEntry.TIMER)));
 
                 recipe.addRecipeStep(recipeStep);
             }

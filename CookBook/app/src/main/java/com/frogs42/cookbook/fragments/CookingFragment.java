@@ -12,11 +12,17 @@ import android.view.ViewGroup;
 import com.frogs42.cookbook.R;
 import com.frogs42.cookbook.adapters.CookingAdapter;
 import com.frogs42.cookbook.model.Recipe;
+import com.h6ah4i.android.widget.advrecyclerview.animator.GeneralItemAnimator;
+import com.h6ah4i.android.widget.advrecyclerview.animator.SwipeDismissItemAnimator;
+import com.h6ah4i.android.widget.advrecyclerview.swipeable.RecyclerViewSwipeManager;
+import com.h6ah4i.android.widget.advrecyclerview.touchguard.RecyclerViewTouchActionGuardManager;
 
 public class CookingFragment extends Fragment {
 
     private RecyclerView recyclerView;
     private Recipe recipe;
+    private RecyclerViewSwipeManager mRecyclerViewSwipeManager;
+    private RecyclerViewTouchActionGuardManager mRecyclerViewTouchActionGuardManager;
 
     public CookingFragment() {
     }
@@ -39,8 +45,19 @@ public class CookingFragment extends Fragment {
     }
 
     private void setUpRecyclerView(){
-        final CookingAdapter adapter = new CookingAdapter(getActivity(),recipe);
+        mRecyclerViewTouchActionGuardManager = new RecyclerViewTouchActionGuardManager();
+        mRecyclerViewTouchActionGuardManager.setInterceptVerticalScrollingWhileAnimationRunning(true);
+        mRecyclerViewTouchActionGuardManager.setEnabled(true);
+        mRecyclerViewSwipeManager = new RecyclerViewSwipeManager();
+        final GeneralItemAnimator animator = new SwipeDismissItemAnimator();
+        animator.setSupportsChangeAnimations(false);
+        recyclerView.setItemAnimator(animator);
+
+        final CookingAdapter adapter = new CookingAdapter(getActivity(), recipe);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-        recyclerView.setAdapter(adapter);
+        recyclerView.setAdapter(mRecyclerViewSwipeManager.createWrappedAdapter(adapter));
+
+        mRecyclerViewTouchActionGuardManager.attachRecyclerView(recyclerView);
+        mRecyclerViewSwipeManager.attachRecyclerView(recyclerView);
     }
 }
