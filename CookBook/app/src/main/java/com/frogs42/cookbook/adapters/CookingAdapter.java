@@ -1,6 +1,8 @@
 package com.frogs42.cookbook.adapters;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -11,6 +13,8 @@ import android.widget.TextView;
 import com.frogs42.cookbook.R;
 import com.frogs42.cookbook.model.Recipe;
 import com.frogs42.cookbook.model.RecipeStep;
+import com.frogs42.cookbook.utils.CookTimer;
+import com.frogs42.cookbook.utils.TimersManager;
 import com.h6ah4i.android.widget.advrecyclerview.swipeable.RecyclerViewSwipeManager;
 import com.h6ah4i.android.widget.advrecyclerview.swipeable.SwipeableItemAdapter;
 import com.h6ah4i.android.widget.advrecyclerview.utils.AbstractSwipeableItemViewHolder;
@@ -23,13 +27,14 @@ import java.util.Comparator;
  * Created by ilia on 16.05.15.
  */
 public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
-        implements SwipeableItemAdapter<CookingAdapter.StepsViewHolder> {
+        implements SwipeableItemAdapter<CookingAdapter.StepsViewHolder>, TimersManager.DataListener {
 
     private static Progress progress;
     private Recipe recipe;
-    private final static int AVAILABLE = 0;
-    private final static int UNAVAILABLE = 1;
-    private final static int COMPLETED = 2;
+    private final static int RUNNING = 0;
+    private final static int AVAILABLE = 1;
+    private final static int UNAVAILABLE = 2;
+    private final static int COMPLETED = 3;
 
     private final int TYPE_HEADER = 0;
     private final int TYPE_STEP = 1;
@@ -106,7 +111,7 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         ((StepsViewHolder) holder).recipeStep = step;
         ((StepsViewHolder) holder).name.setText(step.getTitle());
 //        Log.e("step",step.getTitle() + " " + String.valueOf(progress.getStatus(step)));
-        if(progress.getStatus(step).equals(AVAILABLE))
+        if(progress.getStatus(step).equals(AVAILABLE) || progress.getStatus(step).equals(RUNNING))
             ((StepsViewHolder) holder).name.setTextAppearance(mContext,R.style.available_step);
         if(progress.getStatus(step).equals(UNAVAILABLE))
             ((StepsViewHolder) holder).name.setTextAppearance(mContext,R.style.unavailable_step);
@@ -132,20 +137,38 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             else
                 bgRes = R.drawable.swipe_done_background;
         }
+        if(type == RecyclerViewSwipeManager.DRAWABLE_SWIPE_RIGHT_BACKGROUND) {
+            if(holder.recipeStep.getDurationInSeconds() > 0)
+                bgRes = R.drawable.swipe_timer_right_background;
+            else
+                bgRes = R.drawable.swipe_done_right_background;
+        }
         holder.itemView.setBackgroundResource(bgRes);
     }
 
     @Override
     public int onGetSwipeReactionType(StepsViewHolder holder, int position, int x, int y) {
-        return RecyclerViewSwipeManager.REACTION_CAN_SWIPE_LEFT;
+        if(progress.getStatus(progress.getStep(position)).equals(AVAILABLE) ||
+                progress.getStatus(progress.getStep(position)).equals(RUNNING))
+            return RecyclerViewSwipeManager.REACTION_CAN_SWIPE_BOTH;
+        else
+            return RecyclerViewSwipeManager.REACTION_CAN_NOT_SWIPE_BOTH_WITH_RUBBER_BAND_EFFECT;
     }
 
     @Override
     public int onSwipeItem(StepsViewHolder holder, int position, int result) {
-        if(result == RecyclerViewSwipeManager.RESULT_SWIPED_LEFT) {
+        if(result == RecyclerViewSwipeManager.RESULT_SWIPED_LEFT || result == RecyclerViewSwipeManager.RESULT_SWIPED_RIGHT) {
             if(holder.recipeStep.getDurationInSeconds() > 0) {
-                return RecyclerViewSwipeManager.AFTER_SWIPE_REACTION_DEFAULT;
-                //TODO start timer
+                RecipeStep step = progress.getStep(position);
+                if(!progress.getStatus(step).equals(RUNNING)) {
+                    TimersManager.addTimer(step.getId(), 5);//step.getDurationInSeconds());
+                    progress.setStatus(step, RUNNING);
+                    progress.move(step, progress.getStepsCount(RUNNING) - 1);
+                    return RecyclerViewSwipeManager.AFTER_SWIPE_REACTION_DEFAULT;
+                }else{
+                    showDialog(step);
+                    return RecyclerViewSwipeManager.AFTER_SWIPE_REACTION_DEFAULT;
+                }
             }
             return RecyclerViewSwipeManager.AFTER_SWIPE_REACTION_REMOVE_ITEM;
         }
@@ -159,13 +182,47 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             if(expandedPosition == position) expandedPosition = -1;
             if(expandedPosition > position) expandedPosition--;
 
-            RecipeStep step = progress.getStep(position);
-            progress.setStatus(step, COMPLETED);
-            adapter.unlockStep();
-            progress.move(step, progress.getNonCompletedCount());
+            completeStep(progress.getStep(position));
         }
     }
 
+    @Override
+    public void onDataChanged(CookTimer caller){
+        Log.e("timer",String.valueOf(caller.getID()) + String.valueOf(caller.getRemainingSeconds()));
+    }
+
+    @Override
+    public void onTimerFinished(CookTimer caller){
+        for(int i = 0; i < progress.getStepsCount(); i++) {
+            RecipeStep step = progress.getStep(i);
+            if (step.getId() == caller.getID()) {
+                completeStep(step);
+            }
+        }
+        Log.e("timer",String.valueOf(caller.getID()) + String.valueOf(caller.getRemainingSeconds()));
+    }
+
+    private void showDialog(final RecipeStep step) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
+        builder.setTitle(R.string.is_finished)
+                .setCancelable(true)
+                .setPositiveButton(R.string.yep, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        TimersManager.removeTimer(step.getId());
+                        completeStep(step);
+                    }
+                })
+                .setNegativeButton(R.string.nope, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                    }
+                });
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
 
     private void unlockStep(){
         for(RecipeStep step : recipe.getRecipeSteps())
@@ -188,6 +245,12 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                         progress.move(step, parent_position);
                 }
             }
+    }
+
+    private void completeStep(RecipeStep step){
+        progress.setStatus(step, COMPLETED);
+        adapter.unlockStep();
+        progress.move(step, progress.getNonCompletedCount());
     }
 
     public static class StepsViewHolder extends AbstractSwipeableItemViewHolder {
@@ -240,6 +303,18 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
         public RecipeStep getStep(int position){
             return stepList.get(position);
+        }
+
+        public int getStepsCount(){
+            return  stepList.size();
+        }
+
+        public int getStepsCount(Integer status){
+            int count = 0;
+            for(Integer i: statusList)
+                if(i.equals(status))
+                    count++;
+            return count;
         }
 
         public Integer getStatus(RecipeStep step){

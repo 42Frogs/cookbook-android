@@ -12,6 +12,7 @@ import android.view.ViewGroup;
 import com.frogs42.cookbook.R;
 import com.frogs42.cookbook.adapters.CookingAdapter;
 import com.frogs42.cookbook.model.Recipe;
+import com.frogs42.cookbook.utils.TimersManager;
 import com.h6ah4i.android.widget.advrecyclerview.animator.GeneralItemAnimator;
 import com.h6ah4i.android.widget.advrecyclerview.animator.SwipeDismissItemAnimator;
 import com.h6ah4i.android.widget.advrecyclerview.swipeable.RecyclerViewSwipeManager;
@@ -54,6 +55,7 @@ public class CookingFragment extends Fragment {
         recyclerView.setItemAnimator(animator);
 
         final CookingAdapter adapter = new CookingAdapter(getActivity(), recipe);
+        TimersManager.addDataListener(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         recyclerView.setAdapter(mRecyclerViewSwipeManager.createWrappedAdapter(adapter));
 

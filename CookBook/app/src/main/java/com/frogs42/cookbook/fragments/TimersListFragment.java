@@ -30,9 +30,9 @@ public class TimersListFragment extends Fragment {
         TimersManager.addDataListener(mAdapter);
         mTimersListView.setAdapter(mAdapter);
 
-        TimersManager.addTimer("Timer5", 5);
-        TimersManager.addTimer("Timer10", 10);
-        TimersManager.addTimer("Timer15", 15);
+        TimersManager.addTimer(5, 5);
+        TimersManager.addTimer(10, 10);
+        TimersManager.addTimer(15, 15);
 
         return mView;
     }

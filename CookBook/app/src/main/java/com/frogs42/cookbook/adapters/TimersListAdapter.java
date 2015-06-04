@@ -49,7 +49,12 @@ public class TimersListAdapter extends BaseAdapter implements TimersManager.Data
     }
 
     @Override
-    public void onDataChanged() {
+    public void onDataChanged(CookTimer caller) {
+        notifyDataSetChanged();
+    }
+
+    @Override
+    public void onTimerFinished(CookTimer caller) {
         notifyDataSetChanged();
     }
 }

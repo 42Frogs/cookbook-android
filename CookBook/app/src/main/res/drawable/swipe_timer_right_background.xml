@@ -1,0 +1,10 @@
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <color android:color="#fff9930d"/>
+    </item>
+    <item android:left="16dp">
+        <bitmap
+            android:src="@drawable/ic_action_alarm"
+            android:gravity="left|center_vertical"/>
+    </item>
+</layer-list>

@@ -8,6 +8,11 @@
 
     <string name="timer_done_dialog_title">Время пришло!</string>
     <string name="timer_done_dialog_button_text">Уже бегу!</string>
+    <string name="timer_postpone_dialog_button_text">Продлить</string>
+
+    <string name="is_finished">Уже?</string>
+    <string name="yep">Да</string>
+    <string name="nope">Нет</string>
 
 <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>

@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 
 import com.frogs42.cookbook.R;
 
@@ -15,7 +16,8 @@ public class TimersManager implements CookTimer.CookTimerListener {
     private static TimersManager sInstance;
 
     public interface DataListener {
-        public void onDataChanged();
+        public void onDataChanged(CookTimer caller);
+        void onTimerFinished(CookTimer timer);
     }
 
     private Context mContext;
@@ -39,23 +41,32 @@ public class TimersManager implements CookTimer.CookTimerListener {
             sInstance = null;
     }
 
-    public static void addTimer(String title, int seconds) {
-        CookTimer timer = new CookTimer(sInstance.mContext, title, seconds);
+    public static void addTimer(int id, int seconds) {
+        CookTimer timer = new CookTimer(sInstance.mContext, id, seconds);
         timer.setListener(sInstance);
         sInstance.mTimersContainer.add(timer);
     }
 
+    public static void removeTimer(int id) {
+        for(CookTimer timer : sInstance.mTimersContainer)
+            if(timer.getID() == id){
+                sInstance.mTimersContainer.remove(timer);
+                sInstance.notifyDataChanged(timer);
+                timer.removeListener(sInstance);
+                timer.cancel();
+            }
+
+    }
+
     @Override
     public void onTick(CookTimer caller) {
-        notifyDataChanged();
+        notifyDataChanged(caller);
     }
 
     @Override
     public void onFinish(final CookTimer caller) {
-        mTimersContainer.remove(caller);
-        notifyDataChanged();
+//        notifyDataChanged(caller);
         showTimerFinishedPopup(caller);
-        caller.removeListener(this);
     }
 
     public static void addDataListener(DataListener listener) {
@@ -68,10 +79,16 @@ public class TimersManager implements CookTimer.CookTimerListener {
             sInstance.mDataListeners.remove(listener);
     }
 
-    private void notifyDataChanged() {
+    private void notifyDataChanged(CookTimer caller) {
         for (DataListener listener: mDataListeners)
             if (listener != null)
-                listener.onDataChanged();
+                listener.onDataChanged(caller);
+    }
+
+    private void notifyTimerFinished(CookTimer caller) {
+        for (DataListener listener: mDataListeners)
+            if (listener != null)
+                listener.onTimerFinished(caller);
     }
 
     public static int getTimersCount() {
@@ -82,7 +99,7 @@ public class TimersManager implements CookTimer.CookTimerListener {
         return sInstance.mTimersContainer.get(index);
     }
 
-    private void showTimerFinishedPopup(CookTimer timer) {
+    private void showTimerFinishedPopup(final CookTimer timer) {
         AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
         builder.setTitle(R.string.timer_done_dialog_title)
                 .setMessage(timer.getTitle())
@@ -90,7 +107,15 @@ public class TimersManager implements CookTimer.CookTimerListener {
                 .setPositiveButton(R.string.timer_done_dialog_button_text, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-
+                        mTimersContainer.remove(timer);
+                        notifyTimerFinished(timer);
+                        timer.removeListener(sInstance);
+                    }
+                })
+                .setNegativeButton(R.string.timer_postpone_dialog_button_text, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        timer.addTime(5);
                     }
                 });
 
