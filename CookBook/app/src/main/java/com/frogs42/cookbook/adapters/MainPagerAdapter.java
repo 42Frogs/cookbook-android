@@ -4,6 +4,7 @@ import android.content.Context;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.view.View;
+import android.widget.BaseAdapter;
 import android.widget.ListView;
 
 import com.frogs42.cookbook.R;
@@ -23,8 +24,10 @@ public class MainPagerAdapter extends PagerAdapter {
 
     @Override
     public Object instantiateItem(View collection, int position) {
-        ListView view = new ListView(mContext);
-        ((ViewPager)collection).addView(view);
+        View view = View.inflate(mContext, R.layout.pager_main_item, null);
+        ((ViewPager) collection).addView(view);
+        ListView recipesList = (ListView) view.findViewById(R.id.recipes_list);
+        recipesList.setAdapter(new RecipesListAdapter(mContext));
         return view;
     }
 
@@ -41,7 +44,7 @@ public class MainPagerAdapter extends PagerAdapter {
 
     @Override
     public boolean isViewFromObject(View view, Object o) {
-        return !(view == null || view.getTag() == null || o == null) && view.getTag().equals(o);
+        return view.equals(o);
     }
 
     @Override
