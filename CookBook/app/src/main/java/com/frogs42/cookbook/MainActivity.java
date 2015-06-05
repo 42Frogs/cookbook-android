@@ -1,6 +1,9 @@
 package com.frogs42.cookbook;
 
 import android.app.Fragment;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -9,6 +12,7 @@ import android.view.MenuItem;
 
 import com.frogs42.cookbook.data.DbAdapter;
 import com.frogs42.cookbook.fragments.CookingFragment;
+import com.frogs42.cookbook.fragments.MainPagerFragment;
 import com.frogs42.cookbook.fragments.RecipesListFragment;
 import com.frogs42.cookbook.fragments.TimersListFragment;
 import com.frogs42.cookbook.model.IngredientEntry;
@@ -30,12 +34,18 @@ public class MainActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // TODO: Move to theme definition
+        ActionBar bar = getSupportActionBar();
+        if (bar != null)
+            bar.setBackgroundDrawable(new ColorDrawable(Color.parseColor("#229922")));
+
         // init helpers
         EventsManager.init(this);
         TimersManager.init(this);
 
+        // TODO: move to DataStore
         recipe = DbAdapter.getRecipe(this, 1);
-        if(recipe != null) {
+        /*if(recipe != null) {
             Log.e("name", recipe.getTitle());
             for(IngredientEntry i : recipe.getIngredients())
                 Log.e("ingredient",i.getIngredient().getName() + " " + i.getAmount() + " " + i.getMeasure());
@@ -44,9 +54,14 @@ public class MainActivity extends ActionBarActivity {
                 for(RecipeStep s : step.getParentSteps())
                     Log.e("parent",s.getTitle());
             }
-        }else Log.e("recipe","is null");
+        }else Log.e("recipe","is null");*/
 
         recipesList = DbAdapter.getRecipesList(this);
+
+        getSupportFragmentManager().beginTransaction().replace(
+                R.id.fragments_container,
+                new MainPagerFragment()
+        ).commit();
     }
 
 
