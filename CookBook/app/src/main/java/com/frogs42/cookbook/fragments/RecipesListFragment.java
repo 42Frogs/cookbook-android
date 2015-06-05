@@ -1,14 +1,16 @@
 package com.frogs42.cookbook.fragments;
 
-import android.support.v4.app.Fragment;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import com.frogs42.cookbook.R;
+import com.frogs42.cookbook.data.DbAdapter;
 import com.frogs42.cookbook.model.Recipe;
 
 import java.util.ArrayList;
@@ -30,7 +32,7 @@ public class RecipesListFragment extends Fragment {
         for (int i = 0; i < mRecipesList.size(); i++) {
             recipeStr.add(mRecipesList.get(i).getTitle());
         }
-        ArrayAdapter<String> mRecipeAdapter = new ArrayAdapter<>(
+        final ArrayAdapter<String> mRecipeAdapter = new ArrayAdapter<>(
                 getActivity(),
                 R.layout.item_list_recipe,
                 R.id.recipe,
@@ -38,6 +40,18 @@ public class RecipesListFragment extends Fragment {
         );
         ListView mRecipesListView = (ListView) mView.findViewById(R.id.recipes_list);
         mRecipesListView.setAdapter(mRecipeAdapter);
+        mRecipesListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
+                int recipeId = mRecipesList.get(position).getId();
+                Recipe recipe = DbAdapter.getRecipe(getActivity(), recipeId);
+                getActivity().getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.fragments_container, new CookingFragment().setRecipe(recipe))
+                        .commit();
+
+            }
+        });
         return mView;
     }
 
