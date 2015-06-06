@@ -1,6 +1,7 @@
 package com.frogs42.cookbook.fragments;
 
 
+import android.content.res.ColorStateList;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
@@ -22,8 +23,9 @@ import com.h6ah4i.android.widget.advrecyclerview.touchguard.RecyclerViewTouchAct
 
 public class CookingFragment extends Fragment {
 
-    private RecyclerView recyclerView;
-    private Recipe recipe;
+    private RecyclerView mRecyclerView;
+    private CookingAdapter mAdapter;
+    private Recipe mRecipe;
     private RecyclerViewSwipeManager mRecyclerViewSwipeManager;
     private RecyclerViewTouchActionGuardManager mRecyclerViewTouchActionGuardManager;
 
@@ -36,17 +38,26 @@ public class CookingFragment extends Fragment {
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_cooking, container, false);
 
-        recyclerView = (RecyclerView) rootView.findViewById(R.id.cooking);
+        mRecyclerView = (RecyclerView) rootView.findViewById(R.id.cooking);
         setUpRecyclerView();
 
-        FloatingActionButton fab = new FloatingActionButton(getActivity());
-        fab.setImageResource(R.drawable.ic_av_play_arrow);
+        final FloatingActionButton fab = (FloatingActionButton) rootView.findViewById(R.id.start);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mAdapter.startCooking();
+
+                mRecyclerViewTouchActionGuardManager.attachRecyclerView(mRecyclerView);
+                mRecyclerViewSwipeManager.attachRecyclerView(mRecyclerView);
+                fab.setVisibility(View.GONE);
+            }
+        });
 
         return rootView;
     }
 
     public CookingFragment setRecipe(Recipe recipe){
-        this.recipe = recipe;
+        this.mRecipe = recipe;
         return this;
     }
 
@@ -58,16 +69,13 @@ public class CookingFragment extends Fragment {
 
         final GeneralItemAnimator animator = new SwipeDismissItemAnimator();
         animator.setSupportsChangeAnimations(false);
-        recyclerView.setItemAnimator(animator);
+        mRecyclerView.setItemAnimator(animator);
 
-        final CookingAdapter adapter = new CookingAdapter(getActivity(), recipe);
-        TimersManager.addDataListener(adapter);
-        recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-        recyclerView.setAdapter(mRecyclerViewSwipeManager.createWrappedAdapter(adapter));
-        recyclerView.addItemDecoration(new SimpleListDividerDecorator(getActivity().
+        mAdapter = new CookingAdapter(getActivity(), mRecipe);
+        TimersManager.addDataListener(mAdapter);
+        mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+        mRecyclerView.setAdapter(mRecyclerViewSwipeManager.createWrappedAdapter(mAdapter));
+        mRecyclerView.addItemDecoration(new SimpleListDividerDecorator(getActivity().
                 obtainStyledAttributes(new int[]{android.R.attr.listDivider}).getDrawable(0),true));
-
-        mRecyclerViewTouchActionGuardManager.attachRecyclerView(recyclerView);
-        mRecyclerViewSwipeManager.attachRecyclerView(recyclerView);
     }
 }
