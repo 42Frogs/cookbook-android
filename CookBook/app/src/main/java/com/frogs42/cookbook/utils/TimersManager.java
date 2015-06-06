@@ -99,6 +99,13 @@ public class TimersManager implements CookTimer.CookTimerListener {
         return sInstance.mTimersContainer.get(index);
     }
 
+    public static int getRemainingTime(int id){
+        for(CookTimer timer : sInstance.mTimersContainer)
+            if(timer.getID() == id)
+                return timer.getRemainingSeconds();
+        return 0;
+    }
+
     private void showTimerFinishedPopup(final CookTimer timer) {
         AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
         builder.setTitle(R.string.timer_done_dialog_title)

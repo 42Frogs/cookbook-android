@@ -3,6 +3,7 @@ package com.frogs42.cookbook.adapters;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.support.design.widget.Snackbar;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -99,29 +100,38 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 break;
 
             case TYPE_STEP:
-                return new StepsViewHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.step,parent,false));
+                return new StepsViewHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.step_item,parent,false));
         }
         throw new RuntimeException("there is no type that matches the type " + viewType + " + make sure your using types correctly");
     }
 
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
-//        Log.e("onBind",String.valueOf(position));
+
         RecipeStep step = progress.getStep(position);
         ((StepsViewHolder) holder).recipeStep = step;
         ((StepsViewHolder) holder).name.setText(step.getTitle());
-//        Log.e("step",step.getTitle() + " " + String.valueOf(progress.getStatus(step)));
-        if(progress.getStatus(step).equals(AVAILABLE) || progress.getStatus(step).equals(RUNNING))
-            ((StepsViewHolder) holder).name.setTextAppearance(mContext,R.style.available_step);
-        if(progress.getStatus(step).equals(UNAVAILABLE))
-            ((StepsViewHolder) holder).name.setTextAppearance(mContext,R.style.unavailable_step);
+
+        if(progress.getStatus(step).equals(AVAILABLE) || progress.getStatus(step).equals(RUNNING)) {
+            ((StepsViewHolder) holder).name.setTextAppearance(mContext, R.style.available_step);
+            ((StepsViewHolder) holder).left.setVisibility(View.VISIBLE);
+        }
+        if(progress.getStatus(step).equals(UNAVAILABLE)) {
+            ((StepsViewHolder) holder).name.setTextAppearance(mContext, R.style.unavailable_step);
+            ((StepsViewHolder) holder).left.setVisibility(View.GONE);
+        }
 
         ((StepsViewHolder) holder).description.setText(step.getDescription());
 
-        if (position == expandedPosition)
+        if (position == expandedPosition) {
             ((StepsViewHolder) holder).description.setVisibility(View.VISIBLE);
-         else
+            ((StepsViewHolder) holder).left.setVisibility(View.VISIBLE);
+        }
+         else {
             ((StepsViewHolder) holder).description.setVisibility(View.GONE);
+            if(progress.getStatus(step).equals(UNAVAILABLE))
+                ((StepsViewHolder) holder).left.setVisibility(View.GONE);
+        }
 
 
         ((StepsViewHolder) holder).setSwipeItemSlideAmount(0);
@@ -130,7 +140,7 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     @Override
     public void onSetSwipeBackground(StepsViewHolder holder, int position, int type) {
         int bgRes = 0;
-//        Log.e("background",String.valueOf(position) + " " + String.valueOf(holder.recipeStep.getDurationInSeconds()));
+
         if(type == RecyclerViewSwipeManager.DRAWABLE_SWIPE_LEFT_BACKGROUND) {
             if(holder.recipeStep.getDurationInSeconds() > 0)
                 bgRes = R.drawable.swipe_timer_background;
@@ -156,17 +166,42 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     }
 
     @Override
-    public int onSwipeItem(StepsViewHolder holder, int position, int result) {
+    public int onSwipeItem(StepsViewHolder holder,final int position, int result) {
         if(result == RecyclerViewSwipeManager.RESULT_SWIPED_LEFT || result == RecyclerViewSwipeManager.RESULT_SWIPED_RIGHT) {
             if(holder.recipeStep.getDurationInSeconds() > 0) {
-                RecipeStep step = progress.getStep(position);
+                final RecipeStep step = progress.getStep(position);
                 if(!progress.getStatus(step).equals(RUNNING)) {
                     TimersManager.addTimer(step.getId(), 5);//step.getDurationInSeconds());
                     progress.setStatus(step, RUNNING);
                     progress.move(step, progress.getStepsCount(RUNNING) - 1);
+
+                    Snackbar.make(holder.mContainer,mContext.getString(R.string.timer_started),Snackbar.LENGTH_LONG).
+                            setAction(R.string.undo, new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    progress.setStatus(step, AVAILABLE);
+                                    TimersManager.removeTimer(step.getId());
+                                }
+                            }).show();
+
                     return RecyclerViewSwipeManager.AFTER_SWIPE_REACTION_DEFAULT;
                 }else{
-                    showDialog(step);
+//                    showDialog(step);
+                    final int remainingSeconds = TimersManager.getRemainingTime(step.getId());
+                    TimersManager.removeTimer(step.getId());
+                    completeStep(step);
+
+                    Snackbar.make(holder.mContainer,mContext.getString(R.string.timer_canceled),Snackbar.LENGTH_LONG).
+                            setAction(R.string.undo, new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    progress.setStatus(step,RUNNING);
+                                    progress.move(step, position);
+                                    lockSteps(step);
+                                    TimersManager.addTimer(step.getId(), remainingSeconds);
+                                }
+                            }).show();
+
                     return RecyclerViewSwipeManager.AFTER_SWIPE_REACTION_DEFAULT;
                 }
             }
@@ -176,13 +211,22 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     }
 
     @Override
-    public void onPerformAfterSwipeReaction(StepsViewHolder holder, int position, int result, int reaction) {
+    public void onPerformAfterSwipeReaction(StepsViewHolder holder, final int position, int result, int reaction) {
         if (reaction == RecyclerViewSwipeManager.AFTER_SWIPE_REACTION_REMOVE_ITEM) {
 
             if(expandedPosition == position) expandedPosition = -1;
             if(expandedPosition > position) expandedPosition--;
 
-            completeStep(progress.getStep(position));
+            final RecipeStep step = progress.getStep(position);
+            completeStep(step);
+            Snackbar.make(holder.mContainer,mContext.getString(R.string.completed),Snackbar.LENGTH_LONG).setAction(R.string.undo, new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    progress.setStatus(step,AVAILABLE);
+                    progress.move(step, position);
+                    lockSteps(step);
+                }
+            }).show();
         }
     }
 
@@ -247,9 +291,17 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             }
     }
 
+    private void lockSteps(RecipeStep parent){
+        for(RecipeStep step : recipe.getRecipeSteps())
+            if(step.getParentSteps().contains(parent)){
+                progress.setStatus(step,UNAVAILABLE);
+                progress.move(step,progress.getStepsCount(AVAILABLE));
+            }
+    }
+
     private void completeStep(RecipeStep step){
         progress.setStatus(step, COMPLETED);
-        adapter.unlockStep();
+        unlockStep();
         progress.move(step, progress.getNonCompletedCount());
     }
 
@@ -258,12 +310,14 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         public TextView description;
         public RecipeStep recipeStep;
         public ViewGroup mContainer;
+        public View left;
 
         public StepsViewHolder(View view){
             super(view);
             mContainer = (ViewGroup) view.findViewById(R.id.container);
             name = (TextView) view.findViewById(R.id.name);
             description = (TextView) view.findViewById(R.id.description);
+            left = view.findViewById(R.id.left);
             view.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
