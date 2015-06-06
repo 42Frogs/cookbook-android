@@ -1,12 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
+    android:orientation="horizontal"
     android:minHeight="?android:attr/listPreferredItemHeight"
     android:paddingLeft="16dp"
     android:paddingRight="16dp"
     android:paddingTop="16dp"
     android:paddingBottom="16dp"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content">
+
+    <CheckBox
+        android:id="@+id/btn_star"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:focusable="false"
+        android:paddingRight="16dp"
+        android:button="@android:drawable/btn_star" />
 
     <TextView
         android:id="@+id/recipe"

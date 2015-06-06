@@ -86,7 +86,8 @@ public class DbAdapter {
                 recipe.setId((int) recipeCursor.getLong(recipeCursor.getColumnIndex(Contract.RecipeEntry._ID)))
                       .setTitle(recipeCursor.getString(recipeCursor.getColumnIndex(Contract.RecipeEntry.NAME)))
                       .setDescription(recipeCursor.getString(recipeCursor.getColumnIndex(Contract.RecipeEntry.DESCRIPTION)))
-                      .setIcoPath(recipeCursor.getString(recipeCursor.getColumnIndex(Contract.RecipeEntry.IMAGE_PATH)));
+                      .setIcoPath(recipeCursor.getString(recipeCursor.getColumnIndex(Contract.RecipeEntry.IMAGE_PATH)))
+                      .setFavorite(recipeCursor.getInt(recipeCursor.getColumnIndex(Contract.RecipeEntry.FAVORITE)) != 0);
                 recipesList.add(recipe);
             }
             recipeCursor.close();

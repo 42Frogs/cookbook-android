@@ -12,7 +12,7 @@ public class Recipe {
     private String mTitle = "";
     private String mDescription = "";
     private String mIcoPath = "";
-    private boolean mFavorite = false;
+    private boolean mFavorite;
 
     private ArrayList<IngredientEntry> mIngredients = new ArrayList<>();
     private ArrayList<RecipeStep> mRecipeSteps = new ArrayList<>();
