@@ -10,6 +10,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.frogs42.cookbook.R;
 import com.frogs42.cookbook.adapters.CookingAdapter;
@@ -50,6 +51,16 @@ public class CookingFragment extends Fragment {
                 mRecyclerViewTouchActionGuardManager.attachRecyclerView(mRecyclerView);
                 mRecyclerViewSwipeManager.attachRecyclerView(mRecyclerView);
                 fab.setVisibility(View.GONE);
+                Toast.makeText(getActivity(),getString(R.string.cooking_started),Toast.LENGTH_SHORT).show();
+                //TODO dialog with calculator for ingredients
+            }
+        });
+
+        fab.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                Toast.makeText(getActivity(),getString(R.string.start_cooking),Toast.LENGTH_SHORT).show();
+                return true;
             }
         });
 

@@ -90,7 +90,7 @@ public class DbHelper extends SQLiteOpenHelper {
 
     private String[] getBorschSQL(){
         return new String[]{
-                "INSERT INTO recipe VALUES(1,'Борщ с курицей',NULL,NULL,0,1);",
+                "INSERT INTO recipe VALUES(1,'Борщ с курицей','Национальное украинское блюдо',NULL,0,1);",
                         "INSERT INTO ingredient VALUES(1,'Свекла');",
                         "INSERT INTO ingredient VALUES(2,'Курица');",
                         "INSERT INTO ingredient VALUES(3,'Картофель');",

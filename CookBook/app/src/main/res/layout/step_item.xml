@@ -20,7 +20,8 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
 
             <LinearLayout
                 android:layout_width="wrap_content"
@@ -42,9 +43,10 @@
                     android:id="@+id/status"
                     android:fontFamily="sans-serif-condensed"
                     android:textSize="16sp"
-                    android:textColor="@color/abc_primary_text_material_light"
+                    android:textColor="@color/start_cooking"
                     android:minLines="1"
-                    android:gravity="center_vertical|center_horizontal" />
+                    android:gravity="center_vertical|center_horizontal"
+                    android:visibility="gone" />
 
             </LinearLayout>
 

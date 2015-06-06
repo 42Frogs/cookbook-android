@@ -12,6 +12,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.frogs42.cookbook.R;
+import com.frogs42.cookbook.model.IngredientEntry;
 import com.frogs42.cookbook.model.Recipe;
 import com.frogs42.cookbook.model.RecipeStep;
 import com.frogs42.cookbook.utils.CookTimer;
@@ -83,10 +84,12 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
     @Override
     public long getItemId(int position) {
+        if(position == 0)
+            return -1;
         if(isCooking)
-            return progress.getStep(position).getId();
+            return progress.getStep(position - 1).getId();
         else
-            return recipe.getRecipeSteps().get(position).getId();
+            return recipe.getRecipeSteps().get(position - 1).getId();
     }
 
 //    private boolean hasCommonChild(RecipeStep a, RecipeStep b){
@@ -106,20 +109,21 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             count = progress.getNonCompletedCount();
         else
             count = recipe.getRecipeSteps().size();
-        //count++;  //TODO add header
+        count++;
         return count;
     }
 
     @Override
     public int getItemViewType(int position) {
-        return TYPE_STEP;   //TODO add header
+        if(position == 0) return TYPE_HEADER;
+        return TYPE_STEP;
     }
 
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         switch (viewType){
             case TYPE_HEADER:
-                break;
+                return new HeaderViewHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.recipe_header,parent,false));
 
             case TYPE_STEP:
                 return new StepsViewHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.step_item,parent,false));
@@ -130,8 +134,26 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
 
+        if (position == 0) {
+            ((HeaderViewHolder) holder).name.setText(recipe.getTitle());
+            ((HeaderViewHolder) holder).description.setText(recipe.getDescription());
+
+            if(recipe.getIngredients().size() > 0) {
+                String ingredients = recipe.getIngredients().get(0).getIngredient().getName();
+                ingredients = ingredients.substring(0, 1).toUpperCase() + ingredients.substring(1);
+
+                for (int i = 1; i < recipe.getIngredients().size(); i++)
+                    ingredients += ", " + recipe.getIngredients().get(i).getIngredient().getName();
+
+                ((HeaderViewHolder) holder).ingredients.setText(ingredients);
+            }
+            return;
+        }
+
+        position--; //minus header
+
         RecipeStep step;
-        if(isCooking)
+        if (isCooking)
             step = progress.getStep(position);
         else
             step = recipe.getRecipeSteps().get(position);
@@ -140,10 +162,10 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         ((StepsViewHolder) holder).name.setText(step.getTitle());
         ((StepsViewHolder) holder).description.setText(step.getDescription());
 
-        if(!isCooking){
+        if (!isCooking) {
             ((StepsViewHolder) holder).name.setTextAppearance(mContext, R.style.available_step);
             ((StepsViewHolder) holder).left.setVisibility(View.VISIBLE);
-        }else {
+        } else {
 
             if (progress.getStatus(step).equals(AVAILABLE) || progress.getStatus(step).equals(RUNNING)) {
                 ((StepsViewHolder) holder).name.setTextAppearance(mContext, R.style.available_step);
@@ -190,6 +212,9 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
     @Override
     public int onGetSwipeReactionType(StepsViewHolder holder, int position, int x, int y) {
+
+        position--; //minus header
+
         if(progress.getStatus(progress.getStep(position)).equals(AVAILABLE) ||
                 progress.getStatus(progress.getStep(position)).equals(RUNNING))
             return RecyclerViewSwipeManager.REACTION_CAN_SWIPE_BOTH;
@@ -198,13 +223,18 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     }
 
     @Override
-    public int onSwipeItem(StepsViewHolder holder,final int position, int result) {
+    public int onSwipeItem(final StepsViewHolder holder,final int position, int result) {
+
+        final int progressPosition = position - 1;
+
         if(result == RecyclerViewSwipeManager.RESULT_SWIPED_LEFT || result == RecyclerViewSwipeManager.RESULT_SWIPED_RIGHT) {
             if(holder.recipeStep.getDurationInSeconds() > 0) {
-                final RecipeStep step = progress.getStep(position);
+                final RecipeStep step = progress.getStep(progressPosition);
                 if(!progress.getStatus(step).equals(RUNNING)) {
                     TimersManager.addTimer(step.getId(), 5);//step.getDurationInSeconds());
                     progress.setStatus(step, RUNNING);
+                    holder.status.setText("RUNNING");
+                    holder.status.setVisibility(View.VISIBLE);
                     progress.move(step, progress.getStepsCount(RUNNING) - 1);
 
                     Snackbar.make(holder.mContainer,mContext.getString(R.string.timer_started),Snackbar.LENGTH_LONG).
@@ -212,6 +242,9 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                                 @Override
                                 public void onClick(View v) {
                                     progress.setStatus(step, AVAILABLE);
+                                    holder.status.setText("");
+                                    holder.status.setVisibility(View.GONE);
+                                    progress.move(step,progress.getStepsCount(RUNNING));
                                     TimersManager.removeTimer(step.getId());
                                 }
                             }).show();
@@ -221,16 +254,20 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 //                    showDialog(step);
                     final int remainingSeconds = TimersManager.getRemainingTime(step.getId());
                     TimersManager.removeTimer(step.getId());
+                    holder.status.setText("");
+                    holder.status.setVisibility(View.GONE);
                     completeStep(step);
 
                     Snackbar.make(holder.mContainer,mContext.getString(R.string.timer_canceled),Snackbar.LENGTH_LONG).
                             setAction(R.string.undo, new View.OnClickListener() {
                                 @Override
                                 public void onClick(View v) {
-                                    progress.setStatus(step,RUNNING);
-                                    progress.move(step, position);
+                                    progress.setStatus(step, RUNNING);
                                     lockSteps(step);
                                     TimersManager.addTimer(step.getId(), remainingSeconds);
+                                    holder.status.setText("RUNNING");
+                                    holder.status.setVisibility(View.VISIBLE);
+                                    progress.move(step, progressPosition);
                                 }
                             }).show();
 
@@ -244,18 +281,21 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
     @Override
     public void onPerformAfterSwipeReaction(StepsViewHolder holder, final int position, int result, int reaction) {
+
+        final int progressPosition = position - 1;
+
         if (reaction == RecyclerViewSwipeManager.AFTER_SWIPE_REACTION_REMOVE_ITEM) {
 
             if(expandedPosition == position) expandedPosition = -1;
             if(expandedPosition > position) expandedPosition--;
 
-            final RecipeStep step = progress.getStep(position);
+            final RecipeStep step = progress.getStep(progressPosition);
             completeStep(step);
             Snackbar.make(holder.mContainer,mContext.getString(R.string.completed),Snackbar.LENGTH_LONG).setAction(R.string.undo, new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     progress.setStatus(step,AVAILABLE);
-                    progress.move(step, position);
+                    progress.move(step, progressPosition);
                     lockSteps(step);
                 }
             }).show();
@@ -269,13 +309,14 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
     @Override
     public void onTimerFinished(CookTimer caller){
+        Log.e("timer",String.valueOf(caller.getID()) + String.valueOf(caller.getRemainingSeconds()));
         for(int i = 0; i < progress.getStepsCount(); i++) {
             RecipeStep step = progress.getStep(i);
             if (step.getId() == caller.getID()) {
                 completeStep(step);
+                return;
             }
         }
-        Log.e("timer",String.valueOf(caller.getID()) + String.valueOf(caller.getRemainingSeconds()));
     }
 
     private void showDialog(final RecipeStep step) {
@@ -340,6 +381,7 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     public static class StepsViewHolder extends AbstractSwipeableItemViewHolder {
         public TextView name;
         public TextView description;
+        public TextView status;
         public RecipeStep recipeStep;
         public ViewGroup mContainer;
         public View left;
@@ -349,6 +391,7 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             mContainer = (ViewGroup) view.findViewById(R.id.container);
             name = (TextView) view.findViewById(R.id.name);
             description = (TextView) view.findViewById(R.id.description);
+            status = (TextView) view.findViewById(R.id.status);
             left = view.findViewById(R.id.left);
             view.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -358,19 +401,19 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                         currentPosition = progress.indexOf(recipeStep);
                     else
                         currentPosition = adapter.getRecipe().getRecipeSteps().indexOf(recipeStep);
-                    Log.e("current",String.valueOf(currentPosition));
+//                    Log.e("current",String.valueOf(currentPosition));
                     int prevPosition = expandedPosition;
 
                     if(prevPosition == currentPosition) {
                         description.setVisibility(View.GONE);
                         expandedPosition = -1;
-                        adapter.notifyItemChanged(prevPosition);
+                        adapter.notifyItemChanged(prevPosition + 1);    //header
                     }
                     else{
                         expandedPosition = currentPosition;
                         if(prevPosition > 0)
-                            adapter.notifyItemChanged(prevPosition);
-                        adapter.notifyItemChanged(expandedPosition);
+                            adapter.notifyItemChanged(prevPosition + 1);    //header
+                        adapter.notifyItemChanged(expandedPosition + 1);    //header
                     }
 
                 }
@@ -380,6 +423,20 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         @Override
         public View getSwipeableContainerView() {
             return mContainer;
+        }
+    }
+
+    public static class HeaderViewHolder extends RecyclerView.ViewHolder{
+        public TextView name;
+        public TextView description;
+        public TextView ingredients;
+
+        public HeaderViewHolder(View view){
+            super(view);
+
+            name = (TextView) view.findViewById(R.id.name);
+            description = (TextView) view.findViewById(R.id.description);
+            ingredients = (TextView) view.findViewById(R.id.ingredients);
         }
     }
 
@@ -441,11 +498,11 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             statusList.add(to, status);
 
             if(!status.equals(COMPLETED)) {
-                adapter.notifyItemMoved(from, to);
-                adapter.notifyItemChanged(to);
+                adapter.notifyItemMoved(from + 1, to + 1);  //header
+                adapter.notifyItemChanged(to + 1);  //header
             }
             else
-                adapter.notifyItemRemoved(from);
+                adapter.notifyItemRemoved(from + 1);
         }
 
         public void sort(){

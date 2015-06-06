@@ -75,9 +75,10 @@ public class CookBookProvider  extends ContentProvider {
                                 Contract.IngredientEntry.NAME,
                                 Contract.RecipeIngredientEntry.SIZE,
                                 Contract.RecipeIngredientEntry.MEASURE},
-                        Contract.RecipeIngredientEntry.RECIPE_ID + " = ? AND " +
-                                Contract.RecipeIngredientEntry.INGREDIENT_ID + " = ?",
-                        new String[]{uri.getPathSegments().get(1), Contract.IngredientEntry._ID},
+                        Contract.RecipeIngredientEntry.TABLE_NAME + "." + Contract.RecipeIngredientEntry.RECIPE_ID + " = ? AND " +
+                                Contract.RecipeIngredientEntry.TABLE_NAME + "." + Contract.RecipeIngredientEntry.INGREDIENT_ID + " = " +
+                                Contract.IngredientEntry.TABLE_NAME + "." + Contract.IngredientEntry._ID,
+                        new String[]{uri.getPathSegments().get(1)},
                         null,
                         null,
                         sortOrder);
