@@ -6,8 +6,10 @@ import com.frogs42.cookbook.model.Recipe;
 import com.frogs42.cookbook.model.RecipeHolder;
 import com.frogs42.cookbook.utils.EventsManager;
 import com.frogs42.cookbook.utils.GlobalEvents;
+import com.frogs42.cookbook.utils.Progress;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * Main class for data storing and manipulations
@@ -20,7 +22,7 @@ public class DataStore {
 
     private ArrayList<Recipe> mRecipesList;
     private ArrayList<Recipe> mFavouriteRecipesList;
-    private ArrayList<Recipe> mActiveRecipesList = new ArrayList<>();
+    private HashMap<Recipe,Progress> mActiveRecipesMap = new HashMap<>();
 
 
     private DataStore(Context context) {
@@ -56,7 +58,11 @@ public class DataStore {
     }
 
     public static ArrayList<Recipe> getActiveRecipesList() {
-        return sInstance.mActiveRecipesList;
+        return new ArrayList<Recipe>(sInstance.mActiveRecipesMap.keySet());
+    }
+
+    public static Progress getProgress(Recipe recipe){
+        return sInstance.mActiveRecipesMap.get(recipe);
     }
 
     public static void addRecipe(Recipe recipe) {
@@ -85,13 +91,13 @@ public class DataStore {
         EventsManager.dispatchEvent(GlobalEvents.EVENT_RECIPE_BECOME_NON_FAVOURITE, new RecipeHolder(recipe));
     }
 
-    public static void onStartCooking(Recipe recipe) {
-        sInstance.mActiveRecipesList.add(recipe);
+    public static void onStartCooking(Recipe recipe, Progress progress) {
+        sInstance.mActiveRecipesMap.put(recipe, progress);
         EventsManager.dispatchEvent(GlobalEvents.EVENT_RECIPE_COOKING_STARTED, new RecipeHolder(recipe));
     }
 
     public static void onFinishCooking(Recipe recipe) {
-        sInstance.mActiveRecipesList.remove(recipe);
+        sInstance.mActiveRecipesMap.remove(recipe);
         EventsManager.dispatchEvent(GlobalEvents.EVENT_RECIPE_COOKING_FINISHED, new RecipeHolder(recipe));
     }
 }

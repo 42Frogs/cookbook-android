@@ -18,6 +18,7 @@ import com.frogs42.cookbook.model.IngredientEntry;
 import com.frogs42.cookbook.model.Recipe;
 import com.frogs42.cookbook.model.RecipeStep;
 import com.frogs42.cookbook.utils.CookTimer;
+import com.frogs42.cookbook.utils.Progress;
 import com.frogs42.cookbook.utils.TimersManager;
 import com.h6ah4i.android.widget.advrecyclerview.swipeable.RecyclerViewSwipeManager;
 import com.h6ah4i.android.widget.advrecyclerview.swipeable.SwipeableItemAdapter;
@@ -34,13 +35,9 @@ import java.util.Comparator;
 public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         implements SwipeableItemAdapter<CookingAdapter.StepsViewHolder>, TimersManager.DataListener {
 
-    private static Progress progress;
+    private Progress progress;
     private Recipe recipe;
     private boolean isCooking = false;
-    private final static int RUNNING = 0;
-    private final static int AVAILABLE = 1;
-    private final static int UNAVAILABLE = 2;
-    private final static int COMPLETED = 3;
 
     private final int TYPE_HEADER = 0;
     private final int TYPE_STEP = 1;
@@ -55,6 +52,10 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         mContext = context;
         this.recipe = recipe;
 
+        if(DataStore.getActiveRecipesList().contains(recipe)){
+            isCooking = true;
+            progress = DataStore.getProgress(recipe);
+        }
 
         setHasStableIds(true);
     }
@@ -66,17 +67,17 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         for(RecipeStep step : recipe.getRecipeSteps()) {
             boolean parent_completed = true;
             for (RecipeStep parent : step.getParentSteps())
-                if (!progress.getStatus(parent).equals(COMPLETED)) {
+                if (!progress.getStatus(parent).equals(Progress.COMPLETED)) {
                     parent_completed = false;
                     break;
                 }
-            if(parent_completed) progress.addStatus(AVAILABLE);
-            else progress.addStatus(UNAVAILABLE);
+            if(parent_completed) progress.addStatus(Progress.AVAILABLE);
+            else progress.addStatus(Progress.UNAVAILABLE);
         }
         progress.sort();
         notifyDataSetChanged();
 
-        DataStore.onStartCooking(recipe);
+        DataStore.onStartCooking(recipe,progress);
     }
 
     private Recipe getRecipe(){
@@ -176,12 +177,12 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             ((StepsViewHolder) holder).left.setVisibility(View.VISIBLE);
         } else {
 
-            if (progress.getStatus(step).equals(AVAILABLE) || progress.getStatus(step).equals(RUNNING)) {
+            if (progress.getStatus(step).equals(Progress.AVAILABLE) || progress.getStatus(step).equals(Progress.RUNNING)) {
                 ((StepsViewHolder) holder).name.setTextAppearance(mContext, R.style.available_step);
                 ((StepsViewHolder) holder).description.setTextAppearance(mContext, R.style.available_step);
                 ((StepsViewHolder) holder).left.setVisibility(View.VISIBLE);
             }
-            if (progress.getStatus(step).equals(UNAVAILABLE)) {
+            if (progress.getStatus(step).equals(Progress.UNAVAILABLE)) {
                 ((StepsViewHolder) holder).name.setTextAppearance(mContext, R.style.unavailable_step);
                 ((StepsViewHolder) holder).description.setTextAppearance(mContext, R.style.unavailable_step);
                 ((StepsViewHolder) holder).left.setVisibility(View.GONE);
@@ -193,7 +194,7 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             ((StepsViewHolder) holder).left.setVisibility(View.VISIBLE);
         } else {
             ((StepsViewHolder) holder).description.setVisibility(View.GONE);
-            if (isCooking && progress.getStatus(step).equals(UNAVAILABLE))
+            if (isCooking && progress.getStatus(step).equals(Progress.UNAVAILABLE))
                 ((StepsViewHolder) holder).left.setVisibility(View.GONE);
         }
 
@@ -224,8 +225,8 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
         position--; //minus header
 
-        if(progress.getStatus(progress.getStep(position)).equals(AVAILABLE) ||
-                progress.getStatus(progress.getStep(position)).equals(RUNNING))
+        if(isCooking && progress.getStatus(progress.getStep(position)).equals(Progress.AVAILABLE) ||
+                progress.getStatus(progress.getStep(position)).equals(Progress.RUNNING))
             return RecyclerViewSwipeManager.REACTION_CAN_SWIPE_BOTH;
         else
             return RecyclerViewSwipeManager.REACTION_CAN_NOT_SWIPE_BOTH_WITH_RUBBER_BAND_EFFECT;
@@ -239,21 +240,21 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         if(result == RecyclerViewSwipeManager.RESULT_SWIPED_LEFT || result == RecyclerViewSwipeManager.RESULT_SWIPED_RIGHT) {
             if(holder.recipeStep.getDurationInSeconds() > 0) {
                 final RecipeStep step = progress.getStep(progressPosition);
-                if(!progress.getStatus(step).equals(RUNNING)) {
+                if(!progress.getStatus(step).equals(Progress.RUNNING)) {
                     TimersManager.addTimer(step.getId(), 5);//step.getDurationInSeconds());
-                    progress.setStatus(step, RUNNING);
+                    progress.setStatus(step, Progress.RUNNING);
                     holder.status.setText("RUNNING");
                     holder.status.setVisibility(View.VISIBLE);
-                    progress.move(step, progress.getStepsCount(RUNNING) - 1);
+                    moveStep(step, progress.getStepsCount(Progress.RUNNING) - 1);
 
                     Snackbar.make(holder.mContainer,mContext.getString(R.string.timer_started),Snackbar.LENGTH_LONG).
                             setAction(R.string.undo, new View.OnClickListener() {
                                 @Override
                                 public void onClick(View v) {
-                                    progress.setStatus(step, AVAILABLE);
+                                    progress.setStatus(step, Progress.AVAILABLE);
                                     holder.status.setText("");
                                     holder.status.setVisibility(View.GONE);
-                                    progress.move(step,progress.getStepsCount(RUNNING));
+                                    moveStep(step, progress.getStepsCount(Progress.RUNNING));
                                     TimersManager.removeTimer(step.getId());
                                 }
                             }).show();
@@ -267,16 +268,26 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                     holder.status.setVisibility(View.GONE);
                     completeStep(step);
 
+                    if(progress.getNonCompletedCount() == 0) {
+                        DataStore.onFinishCooking(recipe);
+                        isCooking = false;
+                    }
+
                     Snackbar.make(holder.mContainer,mContext.getString(R.string.timer_canceled),Snackbar.LENGTH_LONG).
                             setAction(R.string.undo, new View.OnClickListener() {
                                 @Override
                                 public void onClick(View v) {
-                                    progress.setStatus(step, RUNNING);
+                                    progress.setStatus(step, Progress.RUNNING);
                                     lockSteps(step);
                                     TimersManager.addTimer(step.getId(), remainingSeconds);
                                     holder.status.setText("RUNNING");
                                     holder.status.setVisibility(View.VISIBLE);
-                                    progress.move(step, progressPosition);
+                                    moveStep(step, progressPosition);
+
+                                    if(!isCooking){
+                                        isCooking = true;
+                                        DataStore.onStartCooking(recipe,progress);
+                                    }
                                 }
                             }).show();
 
@@ -300,12 +311,22 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
             final RecipeStep step = progress.getStep(progressPosition);
             completeStep(step);
+
+            if(progress.getNonCompletedCount() == 0) {
+                DataStore.onFinishCooking(recipe);
+                isCooking = false;
+            }
+
             Snackbar.make(holder.mContainer,mContext.getString(R.string.completed),Snackbar.LENGTH_LONG).setAction(R.string.undo, new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    progress.setStatus(step,AVAILABLE);
-                    progress.move(step, progressPosition);
+                    progress.setStatus(step,Progress.AVAILABLE);
+                    moveStep(step, progressPosition);
                     lockSteps(step);
+                    if(!isCooking){
+                        isCooking = true;
+                        DataStore.onStartCooking(recipe,progress);
+                    }
                 }
             }).show();
         }
@@ -318,11 +339,17 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
     @Override
     public void onTimerFinished(CookTimer caller){
-        Log.e("timer",String.valueOf(caller.getID()) + String.valueOf(caller.getRemainingSeconds()));
+        Log.e("timer", String.valueOf(caller.getID()) + String.valueOf(caller.getRemainingSeconds()));
         for(int i = 0; i < progress.getStepsCount(); i++) {
             RecipeStep step = progress.getStep(i);
             if (step.getId() == caller.getID()) {
                 completeStep(step);
+
+                if(progress.getNonCompletedCount() == 0) {
+                    DataStore.onFinishCooking(recipe);
+                    isCooking = false;
+                }
+
                 return;
             }
         }
@@ -350,14 +377,14 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         dialog.show();
     }
 
-    private void unlockStep(){
+    private void unlockSteps(){
         for(RecipeStep step : recipe.getRecipeSteps())
-            if(progress.getStatus(step).equals(UNAVAILABLE)) {
-                Integer availability = AVAILABLE;
+            if(progress.getStatus(step).equals(Progress.UNAVAILABLE)) {
+                Integer availability = Progress.AVAILABLE;
                 int parent_position = progress.getNonCompletedCount();
                 for (RecipeStep parent : step.getParentSteps()) {
-                    if (!progress.getStatus(parent).equals(COMPLETED)) {
-                        availability = UNAVAILABLE;
+                    if (!progress.getStatus(parent).equals(Progress.COMPLETED)) {
+                        availability = Progress.UNAVAILABLE;
                         break;
                     }
                     int current_index = progress.indexOf(parent);
@@ -365,10 +392,10 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                         parent_position = current_index;
                 }
 
-                if(availability.equals(AVAILABLE)) {
+                if(availability.equals(Progress.AVAILABLE)) {
                     progress.setStatus(step, availability);
                     if(parent_position >= 0)
-                        progress.move(step, parent_position);
+                        moveStep(step, parent_position);
                 }
             }
     }
@@ -376,15 +403,30 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     private void lockSteps(RecipeStep parent){
         for(RecipeStep step : recipe.getRecipeSteps())
             if(step.getParentSteps().contains(parent)){
-                progress.setStatus(step,UNAVAILABLE);
-                progress.move(step,progress.getStepsCount(AVAILABLE));
+                progress.setStatus(step, Progress.UNAVAILABLE);
+                moveStep(step,progress.getStepsCount(Progress.AVAILABLE));
             }
     }
 
     private void completeStep(RecipeStep step){
-        progress.setStatus(step, COMPLETED);
-        unlockStep();
-        progress.move(step, progress.getNonCompletedCount());
+        progress.setStatus(step, Progress.COMPLETED);
+        unlockSteps();
+        int from = progress.indexOf(step);
+        moveStep(step, progress.getNonCompletedCount());
+    }
+
+    private void moveStep(RecipeStep step, int to){
+        int from = progress.indexOf(step);
+        Integer status = progress.getStatus(step);
+
+        progress.move(step,to);
+
+        if(!status.equals(Progress.COMPLETED)) {
+            notifyItemMoved(from + 1, to + 1);  //header
+            notifyItemChanged(to + 1);  //header
+        }
+        else
+            notifyItemRemoved(from + 1);
     }
 
     public static class StepsViewHolder extends AbstractSwipeableItemViewHolder {
@@ -409,7 +451,7 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 public void onClick(View v) {
                     int currentPosition = 0;
                     if(adapter.getIsCooking())
-                        currentPosition = progress.indexOf(recipeStep);
+                        currentPosition = adapter.progress.indexOf(recipeStep);
                     else
                         currentPosition = adapter.getRecipe().getRecipeSteps().indexOf(recipeStep);
 //                    Log.e("current",String.valueOf(currentPosition));
@@ -453,80 +495,80 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         }
     }
 
-    private class Progress{
-        private ArrayList<RecipeStep> stepList;
-        private ArrayList<Integer> statusList;
-
-        public Progress(ArrayList<RecipeStep> steps){
-            stepList = new ArrayList<>(steps);
-            statusList = new ArrayList<>();
-        }
-
-        public RecipeStep getStep(int position){
-            return stepList.get(position);
-        }
-
-        public int getStepsCount(){
-            return  stepList.size();
-        }
-
-        public int getStepsCount(Integer status){
-            int count = 0;
-            for(Integer i: statusList)
-                if(i.equals(status))
-                    count++;
-            return count;
-        }
-
-        public Integer getStatus(RecipeStep step){
-            return statusList.get(stepList.indexOf(step));
-        }
-
-        public void setStatus(RecipeStep step, Integer status){
-            statusList.set(stepList.indexOf(step), status);
-        }
-
-        public void addStatus(Integer status){
-            this.statusList.add(status);
-        }
-
-        public int getNonCompletedCount(){
-            int count = 0;
-            for(Integer i: statusList)
-                if(!i.equals(COMPLETED)) count++;
-            return count;
-        }
-
-        public int indexOf(RecipeStep step){
-            return stepList.indexOf(step);
-        }
-
-        public void move(RecipeStep step, int to){
-            int from = stepList.indexOf(step);
-            stepList.remove(from);
-            stepList.add(to, step);
-
-            Integer status = statusList.get(from);
-            statusList.remove(from);
-            statusList.add(to, status);
-
-            if(!status.equals(COMPLETED)) {
-                adapter.notifyItemMoved(from + 1, to + 1);  //header
-                adapter.notifyItemChanged(to + 1);  //header
-            }
-            else
-                adapter.notifyItemRemoved(from + 1);
-        }
-
-        public void sort(){
-            ArrayList<RecipeStep> tempList = stepList;
-            Collections.sort(tempList, new Comparator<RecipeStep>() {
-                public int compare(RecipeStep a, RecipeStep b) {
-                    return statusList.get(stepList.indexOf(a)).compareTo(statusList.get(stepList.indexOf(b)));
-                }
-            });
-            Collections.sort(statusList);
-            stepList = tempList;
-        }
-    }
+//    private class Progress{
+//        private ArrayList<RecipeStep> stepList;
+//        private ArrayList<Integer> statusList;
+//
+//        public Progress(ArrayList<RecipeStep> steps){
+//            stepList = new ArrayList<>(steps);
+//            statusList = new ArrayList<>();
+//        }
+//
+//        public RecipeStep getStep(int position){
+//            return stepList.get(position);
+//        }
+//
+//        public int getStepsCount(){
+//            return  stepList.size();
+//        }
+//
+//        public int getStepsCount(Integer status){
+//            int count = 0;
+//            for(Integer i: statusList)
+//                if(i.equals(status))
+//                    count++;
+//            return count;
+//        }
+//
+//        public Integer getStatus(RecipeStep step){
+//            return statusList.get(stepList.indexOf(step));
+//        }
+//
+//        public void setStatus(RecipeStep step, Integer status){
+//            statusList.set(stepList.indexOf(step), status);
+//        }
+//
+//        public void addStatus(Integer status){
+//            this.statusList.add(status);
+//        }
+//
+//        public int getNonCompletedCount(){
+//            int count = 0;
+//            for(Integer i: statusList)
+//                if(!i.equals(COMPLETED)) count++;
+//            return count;
+//        }
+//
+//        public int indexOf(RecipeStep step){
+//            return stepList.indexOf(step);
+//        }
+//
+//        public void move(RecipeStep step, int to){
+//            int from = stepList.indexOf(step);
+//            stepList.remove(from);
+//            stepList.add(to, step);
+//
+//            Integer status = statusList.get(from);
+//            statusList.remove(from);
+//            statusList.add(to, status);
+//
+//            if(!status.equals(COMPLETED)) {
+//                adapter.notifyItemMoved(from + 1, to + 1);  //header
+//                adapter.notifyItemChanged(to + 1);  //header
+//            }
+//            else
+//                adapter.notifyItemRemoved(from + 1);
+//        }
+//
+//        public void sort(){
+//            ArrayList<RecipeStep> tempList = stepList;
+//            Collections.sort(tempList, new Comparator<RecipeStep>() {
+//                public int compare(RecipeStep a, RecipeStep b) {
+//                    return statusList.get(stepList.indexOf(a)).compareTo(statusList.get(stepList.indexOf(b)));
+//                }
+//            });
+//            Collections.sort(statusList);
+//            stepList = tempList;
+//        }
+//    }
 }

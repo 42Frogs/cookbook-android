@@ -29,21 +29,31 @@ public class DbAdapter {
             recipeCursor.close();
         }else return null;
 
-        Cursor ingredientsCursor = context.getContentResolver().query(Contract.RecipeIngredientEntry.buildUri(recipe_id),null,null,null,null);
+        getIngredients(context,recipe);
+
+        getSteps(context,recipe);
+
+        return recipe;
+    }
+
+    public static void getIngredients(Context context,Recipe recipe){
+        Cursor ingredientsCursor = context.getContentResolver().query(Contract.RecipeIngredientEntry.buildUri(recipe.getId()), null, null, null, null);
         if(ingredientsCursor != null) {
             for (int i = 0; i < ingredientsCursor.getCount(); i++) {
                 ingredientsCursor.moveToPosition(i);
                 recipe.addIngredient(new IngredientEntry()
-                            .setIngredient(new Ingredient()
-                                    .setId(ingredientsCursor.getInt(ingredientsCursor.getColumnIndex(Contract.IngredientEntry._ID)))
-                                    .setName(ingredientsCursor.getString(ingredientsCursor.getColumnIndex(Contract.IngredientEntry.NAME))))
-                            .setAmount(ingredientsCursor.getInt(ingredientsCursor.getColumnIndex(Contract.RecipeIngredientEntry.SIZE)))
-                            .setMeasure(ingredientsCursor.getString(ingredientsCursor.getColumnIndex(Contract.RecipeIngredientEntry.MEASURE))));
+                        .setIngredient(new Ingredient()
+                                .setId(ingredientsCursor.getInt(ingredientsCursor.getColumnIndex(Contract.IngredientEntry._ID)))
+                                .setName(ingredientsCursor.getString(ingredientsCursor.getColumnIndex(Contract.IngredientEntry.NAME))))
+                        .setAmount(ingredientsCursor.getInt(ingredientsCursor.getColumnIndex(Contract.RecipeIngredientEntry.SIZE)))
+                        .setMeasure(ingredientsCursor.getString(ingredientsCursor.getColumnIndex(Contract.RecipeIngredientEntry.MEASURE))));
             }
             ingredientsCursor.close();
         }
+    }
 
-        Cursor stepsCursor = context.getContentResolver().query(Contract.StepEntry.buildUri(recipe_id),null,null,null,null);
+    public static void getSteps(Context context,Recipe recipe){
+        Cursor stepsCursor = context.getContentResolver().query(Contract.StepEntry.buildUri(recipe.getId()),null,null,null,null);
         if(stepsCursor != null) {
             for (int i = 0; i < stepsCursor.getCount(); i++) {
                 stepsCursor.moveToPosition(i);
@@ -74,7 +84,6 @@ public class DbAdapter {
                 stepParents.close();
             }
         }
-        return recipe;
     }
 
     public static ArrayList<Recipe> getRecipesList(Context context) {
@@ -90,6 +99,11 @@ public class DbAdapter {
                       .setDescription(recipeCursor.getString(recipeCursor.getColumnIndex(Contract.RecipeEntry.DESCRIPTION)))
                       .setIcoPath(recipeCursor.getString(recipeCursor.getColumnIndex(Contract.RecipeEntry.IMAGE_PATH)))
                       .setFavorite(recipeCursor.getInt(recipeCursor.getColumnIndex(Contract.RecipeEntry.FAVORITE)) != 0);
+
+                getIngredients(context,recipe);
+
+                getSteps(context,recipe);
+
                 recipesList.add(recipe);
             }
             recipeCursor.close();
