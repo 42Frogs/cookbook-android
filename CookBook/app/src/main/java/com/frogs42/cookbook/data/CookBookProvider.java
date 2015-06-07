@@ -59,8 +59,8 @@ public class CookBookProvider  extends ContentProvider {
             case RECIPES:
                 retCursor = mOpenHelper.getReadableDatabase().query(Contract.RecipeEntry.TABLE_NAME,
                         projection,
-                        null,
-                        null,
+                        selection,
+                        selectionArgs,
                         null,
                         null,
                         sortOrder);
