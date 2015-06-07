@@ -70,4 +70,9 @@ public class RecipeStep {
         mParentSteps.add(parent);
         return this;
     }
+
+    public RecipeStep clearParents() {
+        mParentSteps.clear();
+        return this;
+    }
 }

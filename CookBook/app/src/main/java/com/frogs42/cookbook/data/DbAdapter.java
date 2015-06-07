@@ -21,6 +21,9 @@ import java.util.HashMap;
 public class DbAdapter {
 
     private static HashMap<Integer, Recipe> sRecipesCache = new HashMap<>();
+    private static HashMap<HashMap.Entry<Integer, Integer>, IngredientEntry> sIngredientEntriesCache = new HashMap<>();
+    private static HashMap<Integer, Ingredient> sIngredientsCache = new HashMap<>();
+    private static HashMap<Integer, RecipeStep> sStepsCache = new HashMap<>();
 
     public static Recipe getRecipe(Context context, int recipe_id){
         Recipe recipe;
@@ -39,13 +42,15 @@ public class DbAdapter {
 
     public static void getIngredients(Context context, Recipe recipe){
         Cursor ingredientsCursor = context.getContentResolver().query(Contract.RecipeIngredientEntry.buildUri(recipe.getId()), null, null, null, null);
+        recipe.clearIngredients();
         if(ingredientsCursor != null) {
             for (int i = 0; i < ingredientsCursor.getCount(); i++) {
                 ingredientsCursor.moveToPosition(i);
-                recipe.addIngredient(new IngredientEntry()
-                        .setIngredient(new Ingredient()
-                                .setId(ingredientsCursor.getInt(ingredientsCursor.getColumnIndex(Contract.IngredientEntry._ID)))
-                                .setName(ingredientsCursor.getString(ingredientsCursor.getColumnIndex(Contract.IngredientEntry.NAME))))
+                int id = ingredientsCursor.getInt(ingredientsCursor.getColumnIndex(Contract.IngredientEntry._ID));
+                Ingredient ingredient = getIngredientInstance(id);
+                IngredientEntry ingredientEntry = getIngredientEntryInstance(recipe.getId(), id);
+                recipe.addIngredient(ingredientEntry
+                        .setIngredient(ingredient.setName(ingredientsCursor.getString(ingredientsCursor.getColumnIndex(Contract.IngredientEntry.NAME))))
                         .setAmount(ingredientsCursor.getInt(ingredientsCursor.getColumnIndex(Contract.RecipeIngredientEntry.SIZE)))
                         .setMeasure(ingredientsCursor.getString(ingredientsCursor.getColumnIndex(Contract.RecipeIngredientEntry.MEASURE))));
             }
@@ -55,13 +60,13 @@ public class DbAdapter {
 
     public static void getSteps(Context context, Recipe recipe){
         Cursor stepsCursor = context.getContentResolver().query(Contract.StepEntry.buildUri(recipe.getId()),null,null,null,null);
+        recipe.clearSteps();
         if(stepsCursor != null) {
             for (int i = 0; i < stepsCursor.getCount(); i++) {
                 stepsCursor.moveToPosition(i);
-                RecipeStep recipeStep = new RecipeStep();
                 int id = stepsCursor.getInt(stepsCursor.getColumnIndex(Contract.StepEntry._ID));
-                recipeStep.setId(id)
-                        .setTitle(stepsCursor.getString(stepsCursor.getColumnIndex(Contract.StepEntry.NAME)))
+                RecipeStep recipeStep = getRecipeStepInstance(id);
+                recipeStep.setTitle(stepsCursor.getString(stepsCursor.getColumnIndex(Contract.StepEntry.NAME)))
                         .setDescription(stepsCursor.getString(stepsCursor.getColumnIndex(Contract.StepEntry.DESCRIPTION)))
                         .setIcoPath(stepsCursor.getString(stepsCursor.getColumnIndex(Contract.StepEntry.IMAGE_PATH)))
                         .setDurationInSeconds(stepsCursor.getInt(stepsCursor.getColumnIndex(Contract.StepEntry.TIMER)));
@@ -72,6 +77,7 @@ public class DbAdapter {
         }
 
         for(RecipeStep i : recipe.getRecipeSteps()) {
+            i.clearParents();
             Cursor stepParents = context.getContentResolver().query(Contract.StepStepEntry.buildUri(i.getId()), null, null, null, null);
             if (stepParents != null) {
                 for (int j = 0; j < stepParents.getCount(); j++) {
@@ -148,6 +154,33 @@ public class DbAdapter {
         if (instance == null) {
             instance = new Recipe().setId(id);
             sRecipesCache.put(id, instance);
+        }
+        return instance;
+    }
+
+    private static RecipeStep getRecipeStepInstance(int id) {
+        RecipeStep instance = sStepsCache.get(id);
+        if (instance == null) {
+            instance = new RecipeStep().setId(id);
+            sStepsCache.put(id, instance);
+        }
+        return instance;
+    }
+
+    private static Ingredient getIngredientInstance(int id) {
+        Ingredient instance = sIngredientsCache.get(id);
+        if (instance == null) {
+            instance = new Ingredient().setId(id);
+            sIngredientsCache.put(id, instance);
+        }
+        return instance;
+    }
+
+    private static IngredientEntry getIngredientEntryInstance(int recipeId, int ingredientId) {
+        IngredientEntry instance = sIngredientEntriesCache.get(new HashMap.SimpleEntry<>(recipeId, ingredientId));
+        if (instance == null) {
+            instance = new IngredientEntry();
+            sIngredientEntriesCache.put(new HashMap.SimpleEntry<>(recipeId, ingredientId), instance);
         }
         return instance;
     }

@@ -16,7 +16,7 @@ import java.util.HashMap;
  */
 public class DataStore {
 
-    private  static DataStore sInstance;
+    private static DataStore sInstance;
 
     private Context mContext;
 
@@ -24,7 +24,6 @@ public class DataStore {
     private ArrayList<Recipe> mFavouriteRecipesList;
     private HashMap<Recipe,Progress> mActiveRecipesMap = new HashMap<>();
     private ArrayList<Recipe> mActiveRecipes = new ArrayList<>();
-
 
     private DataStore(Context context) {
         mContext = context;

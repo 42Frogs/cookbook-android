@@ -32,6 +32,8 @@ public class MainActivity extends ActionBarActivity implements EventsManager.Eve
     Recipe recipe;
     ArrayList<Recipe> recipesList;
 
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -48,7 +50,7 @@ public class MainActivity extends ActionBarActivity implements EventsManager.Eve
         DataStore.init(this);
 
         // TODO: move to DataStore
-        recipe = DbAdapter.getRecipe(this, 1);
+        // recipe = DbAdapter.getRecipe(this, 1);
         /*if(recipe != null) {
             Log.e("name", recipe.getTitle());
             for(IngredientEntry i : recipe.getIngredients())
@@ -60,7 +62,7 @@ public class MainActivity extends ActionBarActivity implements EventsManager.Eve
             }
         }else Log.e("recipe","is null");*/
 
-        recipesList = DbAdapter.getRecipesList(this);
+        // recipesList = DbAdapter.getRecipesList(this);
 
         getSupportFragmentManager().beginTransaction().replace(
                 R.id.fragments_container,

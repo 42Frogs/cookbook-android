@@ -79,4 +79,14 @@ public class Recipe {
         mFavorite = favorite;
         return this;
     }
+
+    public Recipe clearIngredients() {
+        mIngredients.clear();
+        return this;
+    }
+
+    public Recipe clearSteps() {
+        mRecipeSteps.clear();
+        return this;
+    }
 }
