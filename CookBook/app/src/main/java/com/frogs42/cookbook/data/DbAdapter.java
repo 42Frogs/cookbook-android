@@ -1,5 +1,6 @@
 package com.frogs42.cookbook.data;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.util.Log;
@@ -23,7 +24,8 @@ public class DbAdapter {
         if(recipeCursor != null && recipeCursor.moveToFirst()) {
             recipe.setTitle(recipeCursor.getString(recipeCursor.getColumnIndex(Contract.RecipeEntry.NAME)))
                     .setDescription(recipeCursor.getString(recipeCursor.getColumnIndex(Contract.RecipeEntry.DESCRIPTION)))
-                    .setIcoPath(recipeCursor.getString(recipeCursor.getColumnIndex(Contract.RecipeEntry.IMAGE_PATH)));
+                    .setIcoPath(recipeCursor.getString(recipeCursor.getColumnIndex(Contract.RecipeEntry.IMAGE_PATH)))
+                    .setFavorite(recipeCursor.getInt(recipeCursor.getColumnIndex(Contract.RecipeEntry.FAVORITE)) != 0);
             recipeCursor.close();
         }else return null;
 
@@ -86,7 +88,8 @@ public class DbAdapter {
                 recipe.setId((int) recipeCursor.getLong(recipeCursor.getColumnIndex(Contract.RecipeEntry._ID)))
                       .setTitle(recipeCursor.getString(recipeCursor.getColumnIndex(Contract.RecipeEntry.NAME)))
                       .setDescription(recipeCursor.getString(recipeCursor.getColumnIndex(Contract.RecipeEntry.DESCRIPTION)))
-                      .setIcoPath(recipeCursor.getString(recipeCursor.getColumnIndex(Contract.RecipeEntry.IMAGE_PATH)));
+                      .setIcoPath(recipeCursor.getString(recipeCursor.getColumnIndex(Contract.RecipeEntry.IMAGE_PATH)))
+                      .setFavorite(recipeCursor.getInt(recipeCursor.getColumnIndex(Contract.RecipeEntry.FAVORITE)) != 0);
                 recipesList.add(recipe);
             }
             recipeCursor.close();
@@ -95,4 +98,14 @@ public class DbAdapter {
         return recipesList;
     }
 
+    public static int updateFavorite(Context context, int recipeId, boolean isFavorite) {
+        ContentValues values = new ContentValues();
+        values.put(Contract.RecipeEntry._ID, recipeId);
+        values.put(Contract.RecipeEntry.FAVORITE, isFavorite);
+        return context.getContentResolver().update(
+                Contract.RecipeEntry.buildUri(recipeId),
+                values,
+                Contract.RecipeEntry._ID + "= ?",
+                new String[]{Long.toString(recipeId)});
+    }
 }

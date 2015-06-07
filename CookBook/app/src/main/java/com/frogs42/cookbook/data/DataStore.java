@@ -1,6 +1,5 @@
 package com.frogs42.cookbook.data;
 
-import android.content.ContentValues;
 import android.content.Context;
 
 import com.frogs42.cookbook.model.Recipe;
@@ -73,28 +72,14 @@ public class DataStore {
     }
 
     public static void makeFavourite(Recipe recipe) {
-        ContentValues values = new ContentValues();
-        values.put(Contract.RecipeEntry._ID, recipe.getId());
-        values.put(Contract.RecipeEntry.FAVORITE, true);
-        sInstance.mContext.getContentResolver().update(
-                Contract.RecipeEntry.buildUri(recipe.getId()),
-                values, Contract.RecipeEntry._ID + "= ?",
-                new String[]{Long.toString(recipe.getId())});
-
+        DbAdapter.updateFavorite(sInstance.mContext, recipe.getId(), true);
         recipe.setFavorite(true);
         sInstance.mFavouriteRecipesList.add(recipe);
         EventsManager.dispatchEvent(GlobalEvents.EVENT_RECIPE_BECOME_FAVOURITE, new RecipeHolder(recipe));
     }
 
     public static void makeNonFavourite(Recipe recipe) {
-        ContentValues values = new ContentValues();
-        values.put(Contract.RecipeEntry._ID, recipe.getId());
-        values.put(Contract.RecipeEntry.FAVORITE, false);
-        sInstance.mContext.getContentResolver().update(
-                Contract.RecipeEntry.buildUri(recipe.getId()),
-                values, Contract.RecipeEntry._ID + "= ?",
-                new String[]{Long.toString(recipe.getId())});
-
+        DbAdapter.updateFavorite(sInstance.mContext, recipe.getId(), false);
         recipe.setFavorite(false);
         sInstance.mFavouriteRecipesList.remove(recipe);
         EventsManager.dispatchEvent(GlobalEvents.EVENT_RECIPE_BECOME_NON_FAVOURITE, new RecipeHolder(recipe));
