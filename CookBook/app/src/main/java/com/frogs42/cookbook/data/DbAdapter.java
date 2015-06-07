@@ -92,7 +92,7 @@ public class DbAdapter {
         if(recipeCursor != null) {
             for (int i = 0; i < recipeCursor.getCount(); i++) {
                 recipeCursor.moveToPosition(i);
-                Recipe recipe = getRecipeFromCursor(recipeCursor)
+                Recipe recipe = getRecipeFromCursor(recipeCursor);
                 
                 getIngredients(context,recipe);
 
