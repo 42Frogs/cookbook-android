@@ -45,6 +45,8 @@ public class MainPagerAdapter extends PagerAdapter {
                 adapter = new RecipesListAdapter(mContext, DataStore.getActiveRecipesList());
                 EventsManager.addHandler(GlobalEvents.EVENT_RECIPE_COOKING_STARTED, adapter);
                 EventsManager.addHandler(GlobalEvents.EVENT_RECIPE_COOKING_FINISHED, adapter);
+                EventsManager.addHandler(GlobalEvents.EVENT_RECIPE_BECOME_FAVOURITE, adapter);
+                EventsManager.addHandler(GlobalEvents.EVENT_RECIPE_BECOME_NON_FAVOURITE, adapter);
                 recipesList.setAdapter(adapter);
                 break;
             }
@@ -52,6 +54,8 @@ public class MainPagerAdapter extends PagerAdapter {
                 adapter = new RecipesListAdapter(mContext, DataStore.getRecipesList());
                 EventsManager.addHandler(GlobalEvents.EVENT_RECIPE_ADDED, adapter);
                 EventsManager.addHandler(GlobalEvents.EVENT_RECIPE_DELETED, adapter);
+                EventsManager.addHandler(GlobalEvents.EVENT_RECIPE_BECOME_FAVOURITE, adapter);
+                EventsManager.addHandler(GlobalEvents.EVENT_RECIPE_BECOME_NON_FAVOURITE, adapter);
                 recipesList.setAdapter(adapter);
                 break;
             }

@@ -75,6 +75,7 @@ public class DataStore {
                 values, Contract.RecipeEntry._ID + "= ?",
                 new String[]{Long.toString(recipe.getId())});
 
+        recipe.setFavorite(true);
         sInstance.mFavouriteRecipesList.add(recipe);
         EventsManager.dispatchEvent(GlobalEvents.EVENT_RECIPE_BECOME_FAVOURITE, new RecipeHolder(recipe));
     }
@@ -88,6 +89,7 @@ public class DataStore {
                 values, Contract.RecipeEntry._ID + "= ?",
                 new String[]{Long.toString(recipe.getId())});
 
+        recipe.setFavorite(false);
         sInstance.mFavouriteRecipesList.remove(recipe);
         EventsManager.dispatchEvent(GlobalEvents.EVENT_RECIPE_BECOME_NON_FAVOURITE, new RecipeHolder(recipe));
     }

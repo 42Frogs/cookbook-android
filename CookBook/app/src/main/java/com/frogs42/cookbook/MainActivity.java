@@ -104,6 +104,7 @@ public class MainActivity extends ActionBarActivity implements EventsManager.Eve
 
     @Override
     public void onDestroy() {
+        EventsManager.unsubscribeAll(this);
         TimersManager.terminate();
         EventsManager.terminate();
         DataStore.terminate();

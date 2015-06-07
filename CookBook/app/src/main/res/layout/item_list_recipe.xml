@@ -9,6 +9,7 @@
     android:layout_height="wrap_content">
 
     <ImageView
+        android:id="@+id/recipe_icon"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:src="@drawable/petrushka1"
@@ -24,5 +25,16 @@
         android:gravity="center_vertical|center_horizontal"
         android:textColor="#ffffff"
         android:textSize="20sp" />
+
+    <Button
+        android:id="@+id/recipe_favourite_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:textColor="#116611"
+        android:padding="2dp"
+        android:background="@android:color/transparent"
+        android:text="@string/recipe_item_make_favourite"
+        android:clickable="true" />
 
 </LinearLayout>

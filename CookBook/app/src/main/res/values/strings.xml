@@ -27,4 +27,6 @@
     <string name="favourite_recipes_view_header">Избранные рецепты</string>
     <string name="all_recipes_view_header">Все рецепты</string>
     <string name="active_recipes_view_header">Готовится сейчас</string>
+    <string name="recipe_item_make_favourite"><u>Добавить в избранные</u></string>
+    <string name="recipe_item_make_non_favourite"><u>Убрать из избранных</u></string>
 </resources>
