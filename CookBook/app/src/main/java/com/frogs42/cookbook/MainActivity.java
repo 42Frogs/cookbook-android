@@ -20,12 +20,13 @@ import com.frogs42.cookbook.model.IngredientEntry;
 import com.frogs42.cookbook.model.Recipe;
 import com.frogs42.cookbook.model.RecipeStep;
 import com.frogs42.cookbook.utils.EventsManager;
+import com.frogs42.cookbook.utils.GlobalEvents;
 import com.frogs42.cookbook.utils.TimersManager;
 
 import java.util.ArrayList;
 
 
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends ActionBarActivity implements EventsManager.EventHandler {
 
     Recipe recipe;
     ArrayList<Recipe> recipesList;
@@ -64,6 +65,8 @@ public class MainActivity extends ActionBarActivity {
                 R.id.fragments_container,
                 new MainPagerFragment()
         ).commit();
+
+        EventsManager.addHandler(GlobalEvents.EVENT_RECIPE_SELECTED, this);
     }
 
 
@@ -104,5 +107,15 @@ public class MainActivity extends ActionBarActivity {
         EventsManager.terminate();
         DataStore.terminate();
         super.onDestroy();
+    }
+
+    @Override
+    public void handleEvent(String eventType, Object eventData) {
+        if (GlobalEvents.EVENT_RECIPE_SELECTED.equals(eventType)) {
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragments_container, new CookingFragment().setRecipe(recipe))
+                    .addToBackStack(null)
+                    .commit();
+        }
     }
 }

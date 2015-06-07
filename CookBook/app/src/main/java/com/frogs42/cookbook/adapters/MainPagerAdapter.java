@@ -4,12 +4,16 @@ import android.content.Context;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
 
 import com.frogs42.cookbook.R;
 import com.frogs42.cookbook.data.DataStore;
 import com.frogs42.cookbook.fragments.MainPagerFragment;
+import com.frogs42.cookbook.model.Recipe;
+import com.frogs42.cookbook.model.RecipeHolder;
 import com.frogs42.cookbook.utils.EventsManager;
+import com.frogs42.cookbook.utils.GlobalEvents;
 
 /**
  * Main pager adapter class
@@ -28,29 +32,40 @@ public class MainPagerAdapter extends PagerAdapter {
         View view = View.inflate(mContext, R.layout.pager_main_item, null);
         ((ViewPager) collection).addView(view);
         ListView recipesList = (ListView) view.findViewById(R.id.recipes_list);
+        RecipesListAdapter adapter = null;
         switch (position) {
             case MainPagerFragment.FAVOURITE_RECIPES_VIEW: {
-                RecipesListAdapter adapter = new RecipesListAdapter(mContext, DataStore.getFavouriteRecipesList());
-                EventsManager.addHandler(DataStore.EVENT_RECIPE_BECOME_FAVOURITE, adapter);
-                EventsManager.addHandler(DataStore.EVENT_RECIPE_BECOME_NON_FAVOURITE, adapter);
+                adapter = new RecipesListAdapter(mContext, DataStore.getFavouriteRecipesList());
+                EventsManager.addHandler(GlobalEvents.EVENT_RECIPE_BECOME_FAVOURITE, adapter);
+                EventsManager.addHandler(GlobalEvents.EVENT_RECIPE_BECOME_NON_FAVOURITE, adapter);
                 recipesList.setAdapter(adapter);
                 break;
             }
             case MainPagerFragment.ACTIVE_RECIPES_VIEW: {
-                RecipesListAdapter adapter = new RecipesListAdapter(mContext, DataStore.getActiveRecipesList());
-                EventsManager.addHandler(DataStore.EVENT_RECIPE_COOKING_STARTED, adapter);
-                EventsManager.addHandler(DataStore.EVENT_RECIPE_COOKING_FINISHED, adapter);
+                adapter = new RecipesListAdapter(mContext, DataStore.getActiveRecipesList());
+                EventsManager.addHandler(GlobalEvents.EVENT_RECIPE_COOKING_STARTED, adapter);
+                EventsManager.addHandler(GlobalEvents.EVENT_RECIPE_COOKING_FINISHED, adapter);
                 recipesList.setAdapter(adapter);
                 break;
             }
             case MainPagerFragment.ALL_RECIPES_VIEW: {
-                RecipesListAdapter adapter = new RecipesListAdapter(mContext, DataStore.getRecipesList());
-                EventsManager.addHandler(DataStore.EVENT_RECIPE_ADDED, adapter);
-                EventsManager.addHandler(DataStore.EVENT_RECIPE_DELETED, adapter);
+                adapter = new RecipesListAdapter(mContext, DataStore.getRecipesList());
+                EventsManager.addHandler(GlobalEvents.EVENT_RECIPE_ADDED, adapter);
+                EventsManager.addHandler(GlobalEvents.EVENT_RECIPE_DELETED, adapter);
                 recipesList.setAdapter(adapter);
                 break;
             }
         }
+
+        final RecipesListAdapter finalAdapter = adapter;
+        recipesList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Recipe selectedRecipe = finalAdapter.getItem(position);
+                EventsManager.dispatchEvent(GlobalEvents.EVENT_RECIPE_SELECTED, new RecipeHolder(selectedRecipe));
+            }
+        });
+
         return view;
     }
 
