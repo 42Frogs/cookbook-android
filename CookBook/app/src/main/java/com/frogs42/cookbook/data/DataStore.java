@@ -52,7 +52,7 @@ public class DataStore {
     }
 
     public static ArrayList<Recipe> getActiveRecipesList() {
-        return new ArrayList<Recipe>(sInstance.mActiveRecipesMap.keySet());
+        return new ArrayList<>(sInstance.mActiveRecipesMap.keySet());
     }
 
     public static Progress getProgress(Recipe recipe){

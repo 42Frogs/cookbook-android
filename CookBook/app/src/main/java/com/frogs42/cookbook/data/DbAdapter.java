@@ -13,20 +13,22 @@ import com.frogs42.cookbook.model.Recipe;
 import com.frogs42.cookbook.model.RecipeStep;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * Created by ilia on 08.05.15.
  */
 public class DbAdapter {
 
-    public static Recipe getRecipe(Context context, int recipe_id){
-        Recipe recipe = new Recipe().setId(recipe_id);
+    private static HashMap<Integer, Recipe> sRecipesCache = new HashMap<>();
 
+    public static Recipe getRecipe(Context context, int recipe_id){
+        Recipe recipe;
         Cursor recipeCursor = context.getContentResolver().query(Contract.RecipeEntry.buildUri(recipe_id), null, null, null, null);
         if(recipeCursor != null && recipeCursor.moveToFirst()) {
             recipe = getRecipeFromCursor(recipeCursor);
             recipeCursor.close();
-        }else return null;
+        } else return null;
 
         getIngredients(context,recipe);
 
@@ -35,7 +37,7 @@ public class DbAdapter {
         return recipe;
     }
 
-    public static void getIngredients(Context context,Recipe recipe){
+    public static void getIngredients(Context context, Recipe recipe){
         Cursor ingredientsCursor = context.getContentResolver().query(Contract.RecipeIngredientEntry.buildUri(recipe.getId()), null, null, null, null);
         if(ingredientsCursor != null) {
             for (int i = 0; i < ingredientsCursor.getCount(); i++) {
@@ -51,7 +53,7 @@ public class DbAdapter {
         }
     }
 
-    public static void getSteps(Context context,Recipe recipe){
+    public static void getSteps(Context context, Recipe recipe){
         Cursor stepsCursor = context.getContentResolver().query(Contract.StepEntry.buildUri(recipe.getId()),null,null,null,null);
         if(stepsCursor != null) {
             for (int i = 0; i < stepsCursor.getCount(); i++) {
@@ -96,7 +98,7 @@ public class DbAdapter {
                 
                 getIngredients(context,recipe);
 
-                getSteps(context,recipe);
+                getSteps(context, recipe);
 
                 recipesList.add(recipe);
             }
@@ -141,10 +143,19 @@ public class DbAdapter {
                 new String[]{Long.toString(recipeId)});
     }
 
+    private static Recipe getRecipeInstance(int id) {
+        Recipe instance = sRecipesCache.get(id);
+        if (instance == null) {
+            instance = new Recipe().setId(id);
+            sRecipesCache.put(id, instance);
+        }
+        return instance;
+    }
+
     private static Recipe getRecipeFromCursor(Cursor cursor) {
-        Recipe recipe = new Recipe();
-        return recipe.setId((int) cursor.getLong(cursor.getColumnIndex(Contract.RecipeEntry._ID)))
-                .setTitle(cursor.getString(cursor.getColumnIndex(Contract.RecipeEntry.NAME)))
+        int recipeId = (int) cursor.getLong(cursor.getColumnIndex(Contract.RecipeEntry._ID));
+        Recipe recipe = getRecipeInstance(recipeId);
+        return recipe.setTitle(cursor.getString(cursor.getColumnIndex(Contract.RecipeEntry.NAME)))
                 .setDescription(cursor.getString(cursor.getColumnIndex(Contract.RecipeEntry.DESCRIPTION)))
                 .setIcoPath(cursor.getString(cursor.getColumnIndex(Contract.RecipeEntry.IMAGE_PATH)))
                 .setFavorite(cursor.getInt(cursor.getColumnIndex(Contract.RecipeEntry.FAVORITE)) != 0);
