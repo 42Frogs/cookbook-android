@@ -10,6 +10,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.frogs42.cookbook.data.DataStore;
 import com.frogs42.cookbook.data.DbAdapter;
 import com.frogs42.cookbook.fragments.CookingFragment;
 import com.frogs42.cookbook.fragments.MainPagerFragment;
@@ -42,6 +43,7 @@ public class MainActivity extends ActionBarActivity {
         // init helpers
         EventsManager.init(this);
         TimersManager.init(this);
+        DataStore.init(this);
 
         // TODO: move to DataStore
         recipe = DbAdapter.getRecipe(this, 1);
@@ -100,6 +102,7 @@ public class MainActivity extends ActionBarActivity {
     public void onDestroy() {
         TimersManager.terminate();
         EventsManager.terminate();
+        DataStore.terminate();
         super.onDestroy();
     }
 }

@@ -9,20 +9,21 @@ import android.widget.TextView;
 import com.frogs42.cookbook.R;
 import com.frogs42.cookbook.data.DbAdapter;
 import com.frogs42.cookbook.model.Recipe;
+import com.frogs42.cookbook.utils.EventsManager;
 
 import java.util.ArrayList;
 
 /**
  * Created by igor on 05.06.15.
  */
-public class RecipesListAdapter extends BaseAdapter {
+public class RecipesListAdapter extends BaseAdapter implements EventsManager.EventHandler {
 
     private Context mContext;
     private ArrayList<Recipe> mObjects;
 
-    public RecipesListAdapter(Context context) {
+    public RecipesListAdapter(Context context, ArrayList<Recipe> objects) {
         mContext = context;
-        mObjects = DbAdapter.getRecipesList(mContext);
+        mObjects = objects;
     }
 
     @Override
@@ -38,6 +39,11 @@ public class RecipesListAdapter extends BaseAdapter {
     @Override
     public long getItemId(int position) {
         return getItem(position).getId();
+    }
+
+    @Override
+    public void handleEvent(String eventType, Object eventData) {
+        notifyDataSetChanged();
     }
 
     private class ViewHolder {

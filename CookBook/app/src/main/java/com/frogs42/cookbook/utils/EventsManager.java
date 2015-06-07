@@ -5,6 +5,8 @@ import android.os.Handler;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * Class helper, that implements Mediator pattern
@@ -60,7 +62,17 @@ public class EventsManager {
             handlers.remove(handler);
     }
 
-    public static void handleEvent(final String eventType, final Object eventData) {
+    public static void unsubscribeAll(EventHandler handler) {
+        assert sInstance != null : "EventsManager must be initialized first";
+        assert handler != null   : "Handler cannot be null";
+
+        for (Object o : sInstance.mEventHandlers.entrySet()) {
+            HashMap.Entry pair = (HashMap.Entry) o;
+            removeHandler((String) pair.getKey(), handler);
+        }
+    }
+
+    public static void dispatchEvent(final String eventType, final Object eventData) {
         assert sInstance != null : "EventsManager must be initialized first";
 
         if (!sInstance.mEventHandlers.containsKey(eventType))
