@@ -141,17 +141,17 @@ public class DbHelper extends SQLiteOpenHelper {
                 "INSERT INTO step_step VALUES(14,15);",
                 "INSERT INTO step_step VALUES(15,16);",
                 "INSERT INTO step_step VALUES(8,10);",
-                "INSERT INTO recipe VALUES(2,'Суп харчо',NULL,NULL,0,1);",
-                "INSERT INTO recipe VALUES(3,'Марокканский суп',NULL,NULL,0,1);",
-                "INSERT INTO recipe VALUES(4,'Суп с чечевицей и болгарским перцем',NULL,NULL,0,1);",
-                "INSERT INTO recipe VALUES(5,'Холодный суп а-ля окрошка',NULL,NULL,0,1);",
-                "INSERT INTO recipe VALUES(6,'Суп-пюре из чечевицы',NULL,NULL,0,1);",
-                "INSERT INTO recipe VALUES(7,'Солянка',NULL,NULL,0,1);",
-                "INSERT INTO recipe VALUES(8,'Томатный суп из морепродуктов',NULL,NULL,0,1);",
-                "INSERT INTO recipe VALUES(9,'Тыквенный суп с имбирем',NULL,NULL,0,1);",
-                "INSERT INTO recipe VALUES(10,'Суп-пюре из баклажанов',NULL,NULL,0,1);",
-                "INSERT INTO recipe VALUES(11,'Гороховый суп',NULL,NULL,0,1);",
-                "INSERT INTO recipe VALUES(12,'Суп с фрикадельками',NULL,NULL,0,1);"
+                "INSERT INTO recipe VALUES(2,'Суп харчо',NULL,'file:///android_asset/harcho.jpg',0,1);",
+                "INSERT INTO recipe VALUES(3,'Марокканский суп',NULL,'file:///android_asset/marokko_soup.jpg',0,1);",
+                "INSERT INTO recipe VALUES(4,'Суп с чечевицей и болгарским перцем',NULL,'file:///android_asset/bolg_soup.jpg',0,1);",
+                "INSERT INTO recipe VALUES(5,'Холодный суп а-ля окрошка',NULL,'file:///android_asset/okroshka.jpg',0,1);",
+                "INSERT INTO recipe VALUES(6,'Суп-пюре из чечевицы',NULL,'file:///android_asset/chechevica.jpg',0,1);",
+                "INSERT INTO recipe VALUES(7,'Солянка',NULL,'file:///android_asset/solyanka.jpg',0,1);",
+                "INSERT INTO recipe VALUES(8,'Томатный суп из морепродуктов',NULL,'file:///android_asset/tomat_more.jpg',0,1);",
+                "INSERT INTO recipe VALUES(9,'Тыквенный суп с имбирем',NULL,'file:///android_asset/tikva_imbir.jpg',0,1);",
+                "INSERT INTO recipe VALUES(10,'Суп-пюре из баклажанов',NULL,'file:///android_asset/baklazhan.jpg',0,1);",
+                "INSERT INTO recipe VALUES(11,'Гороховый суп',NULL,'file:///android_asset/goroh.jpg',0,1);",
+                "INSERT INTO recipe VALUES(12,'Суп с фрикадельками',NULL,'file:///android_asset/frikadelka.jpg',0,1);"
 
         };
     }

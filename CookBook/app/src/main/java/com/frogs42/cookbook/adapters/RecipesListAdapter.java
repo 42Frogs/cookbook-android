@@ -17,6 +17,7 @@ import com.frogs42.cookbook.data.DbAdapter;
 import com.frogs42.cookbook.model.Recipe;
 import com.frogs42.cookbook.utils.EventsManager;
 import com.frogs42.cookbook.utils.Utils;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
@@ -76,9 +77,8 @@ public class RecipesListAdapter extends BaseAdapter implements EventsManager.Eve
         final Recipe item = getItem(position);
         holder.textView.setText(item.getTitle());
 
-        Bitmap iconBitmap = Utils.loadFromFile(item.getIcoPath());
-        if (iconBitmap != null)
-            holder.icon.setImageDrawable(new BitmapDrawable(mContext.getResources(), iconBitmap));
+        if (item.getIcoPath() != null)
+            Picasso.with(mContext).load(item.getIcoPath()).into(holder.icon);
 
         if (item.isFavorite()) {
             holder.favouriteAction.setText(R.string.recipe_item_make_non_favourite);
