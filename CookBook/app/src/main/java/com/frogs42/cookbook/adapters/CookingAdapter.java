@@ -9,6 +9,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.frogs42.cookbook.R;
@@ -21,6 +22,7 @@ import com.frogs42.cookbook.utils.TimersManager;
 import com.h6ah4i.android.widget.advrecyclerview.swipeable.RecyclerViewSwipeManager;
 import com.h6ah4i.android.widget.advrecyclerview.swipeable.SwipeableItemAdapter;
 import com.h6ah4i.android.widget.advrecyclerview.utils.AbstractSwipeableItemViewHolder;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -141,6 +143,8 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             ((HeaderViewHolder) holder).name.setText(recipe.getTitle());
             ((HeaderViewHolder) holder).description.setText(recipe.getDescription());
 
+            Picasso.with(mContext).load(recipe.getIcoPath()).into(((HeaderViewHolder) holder).image);
+
             if(recipe.getIngredients().size() > 0) {
                 String ingredients = recipe.getIngredients().get(0).getIngredient().getName();
                 ingredients = ingredients.substring(0, 1).toUpperCase() + ingredients.substring(1);
@@ -164,6 +168,8 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         ((StepsViewHolder) holder).recipeStep = step;
         ((StepsViewHolder) holder).name.setText(step.getTitle());
         ((StepsViewHolder) holder).description.setText(step.getDescription());
+
+        Picasso.with(mContext).load(step.getIcoPath()).resize(0,100).into(((StepsViewHolder) holder).image);
 
         if (!isCooking) {
             ((StepsViewHolder) holder).name.setTextAppearance(mContext, R.style.available_step);
@@ -385,6 +391,7 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         public TextView name;
         public TextView description;
         public TextView status;
+        public ImageView image;
         public RecipeStep recipeStep;
         public ViewGroup mContainer;
         public View left;
@@ -395,6 +402,7 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             name = (TextView) view.findViewById(R.id.name);
             description = (TextView) view.findViewById(R.id.description);
             status = (TextView) view.findViewById(R.id.status);
+            image = (ImageView) view.findViewById(R.id.imageView);
             left = view.findViewById(R.id.left);
             view.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -433,6 +441,7 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         public TextView name;
         public TextView description;
         public TextView ingredients;
+        public ImageView image;
 
         public HeaderViewHolder(View view){
             super(view);
@@ -440,6 +449,7 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             name = (TextView) view.findViewById(R.id.name);
             description = (TextView) view.findViewById(R.id.description);
             ingredients = (TextView) view.findViewById(R.id.ingredients);
+            image = (ImageView) view.findViewById(R.id.imageView);
         }
     }
 
