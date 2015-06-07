@@ -1,15 +1,19 @@
 package com.frogs42.cookbook.adapters;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.frogs42.cookbook.R;
 import com.frogs42.cookbook.data.DbAdapter;
 import com.frogs42.cookbook.model.Recipe;
 import com.frogs42.cookbook.utils.EventsManager;
+import com.frogs42.cookbook.utils.Utils;
 
 import java.util.ArrayList;
 
@@ -48,6 +52,7 @@ public class RecipesListAdapter extends BaseAdapter implements EventsManager.Eve
 
     private class ViewHolder {
         TextView textView;
+        ImageView icon;
     }
 
     @Override
@@ -62,7 +67,12 @@ public class RecipesListAdapter extends BaseAdapter implements EventsManager.Eve
 
         ViewHolder holder = (ViewHolder) convertView.getTag();
 
-        holder.textView.setText(getItem(position).getTitle());
+        Recipe item = getItem(position);
+        holder.textView.setText(item.getTitle());
+
+        Bitmap iconBitmap = Utils.loadFromFile(item.getIcoPath());
+        if (iconBitmap != null)
+            holder.icon.setImageDrawable(new BitmapDrawable(mContext.getResources(), iconBitmap));
 
         return convertView;
     }
