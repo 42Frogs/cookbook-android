@@ -1,8 +1,10 @@
 package com.frogs42.cookbook.data;
 
+import android.annotation.TargetApi;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.os.Build;
 import android.util.Log;
 
 import com.frogs42.cookbook.model.Ingredient;
@@ -22,10 +24,7 @@ public class DbAdapter {
 
         Cursor recipeCursor = context.getContentResolver().query(Contract.RecipeEntry.buildUri(recipe_id), null, null, null, null);
         if(recipeCursor != null && recipeCursor.moveToFirst()) {
-            recipe.setTitle(recipeCursor.getString(recipeCursor.getColumnIndex(Contract.RecipeEntry.NAME)))
-                    .setDescription(recipeCursor.getString(recipeCursor.getColumnIndex(Contract.RecipeEntry.DESCRIPTION)))
-                    .setIcoPath(recipeCursor.getString(recipeCursor.getColumnIndex(Contract.RecipeEntry.IMAGE_PATH)))
-                    .setFavorite(recipeCursor.getInt(recipeCursor.getColumnIndex(Contract.RecipeEntry.FAVORITE)) != 0);
+            recipe = getRecipeFromCursor(recipeCursor);
             recipeCursor.close();
         }else return null;
 
@@ -93,13 +92,8 @@ public class DbAdapter {
         if(recipeCursor != null) {
             for (int i = 0; i < recipeCursor.getCount(); i++) {
                 recipeCursor.moveToPosition(i);
-                Recipe recipe = new Recipe();
-                recipe.setId((int) recipeCursor.getLong(recipeCursor.getColumnIndex(Contract.RecipeEntry._ID)))
-                      .setTitle(recipeCursor.getString(recipeCursor.getColumnIndex(Contract.RecipeEntry.NAME)))
-                      .setDescription(recipeCursor.getString(recipeCursor.getColumnIndex(Contract.RecipeEntry.DESCRIPTION)))
-                      .setIcoPath(recipeCursor.getString(recipeCursor.getColumnIndex(Contract.RecipeEntry.IMAGE_PATH)))
-                      .setFavorite(recipeCursor.getInt(recipeCursor.getColumnIndex(Contract.RecipeEntry.FAVORITE)) != 0);
-
+                Recipe recipe = getRecipeFromCursor(recipeCursor)
+                
                 getIngredients(context,recipe);
 
                 getSteps(context,recipe);
@@ -112,6 +106,30 @@ public class DbAdapter {
         return recipesList;
     }
 
+    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
+    public static ArrayList<Recipe> getFavoriteRecipesList(Context context) {
+        ArrayList<Recipe> favoriteRecipes = new ArrayList<>();
+
+        Cursor recipeCursor = context.getContentResolver().query(
+                Contract.RecipeEntry.CONTENT_URI,
+                null,
+                Contract.RecipeEntry.FAVORITE + "= ?",
+                new String[]{"1"},
+                null,
+                null);
+
+        if(recipeCursor != null) {
+            for (int i = 0; i < recipeCursor.getCount(); i++) {
+                recipeCursor.moveToPosition(i);
+                Recipe recipe = getRecipeFromCursor(recipeCursor);
+                favoriteRecipes.add(recipe);
+            }
+            recipeCursor.close();
+        }
+
+        return favoriteRecipes;
+    }
+
     public static int updateFavorite(Context context, int recipeId, boolean isFavorite) {
         ContentValues values = new ContentValues();
         values.put(Contract.RecipeEntry._ID, recipeId);
@@ -121,5 +139,14 @@ public class DbAdapter {
                 values,
                 Contract.RecipeEntry._ID + "= ?",
                 new String[]{Long.toString(recipeId)});
+    }
+
+    private static Recipe getRecipeFromCursor(Cursor cursor) {
+        Recipe recipe = new Recipe();
+        return recipe.setId((int) cursor.getLong(cursor.getColumnIndex(Contract.RecipeEntry._ID)))
+                .setTitle(cursor.getString(cursor.getColumnIndex(Contract.RecipeEntry.NAME)))
+                .setDescription(cursor.getString(cursor.getColumnIndex(Contract.RecipeEntry.DESCRIPTION)))
+                .setIcoPath(cursor.getString(cursor.getColumnIndex(Contract.RecipeEntry.IMAGE_PATH)))
+                .setFavorite(cursor.getInt(cursor.getColumnIndex(Contract.RecipeEntry.FAVORITE)) != 0);
     }
 }

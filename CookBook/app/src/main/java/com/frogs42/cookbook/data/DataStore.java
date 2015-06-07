@@ -46,13 +46,7 @@ public class DataStore {
     }
 
     public static ArrayList<Recipe> getFavouriteRecipesList() {
-        // TODO: make it ok)!
-        sInstance.mFavouriteRecipesList = DbAdapter.getRecipesList(sInstance.mContext);
-        for (int i = sInstance.mFavouriteRecipesList.size() - 1; i >= 0; --i) {
-            if (!sInstance.mFavouriteRecipesList.get(i).isFavorite()) {
-                sInstance.mFavouriteRecipesList.remove(i);
-            }
-        }
+        sInstance.mFavouriteRecipesList = DbAdapter.getFavoriteRecipesList(sInstance.mContext);
 
         return sInstance.mFavouriteRecipesList;
     }
