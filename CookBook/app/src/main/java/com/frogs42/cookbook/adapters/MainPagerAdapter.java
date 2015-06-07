@@ -58,14 +58,14 @@ public class MainPagerAdapter extends PagerAdapter {
         }
 
         final RecipesListAdapter finalAdapter = adapter;
-        recipesList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Recipe selectedRecipe = finalAdapter.getItem(position);
-                if (position == MainPagerFragment.ALL_RECIPES_VIEW || position == MainPagerFragment.FAVOURITE_RECIPES_VIEW)
+        if (position == MainPagerFragment.ALL_RECIPES_VIEW || position == MainPagerFragment.FAVOURITE_RECIPES_VIEW)
+            recipesList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    Recipe selectedRecipe = finalAdapter.getItem(position);
                     EventsManager.dispatchEvent(GlobalEvents.EVENT_RECIPE_SELECTED, new RecipeHolder(selectedRecipe));
-            }
-        });
+                }
+            });
 
         return view;
     }
