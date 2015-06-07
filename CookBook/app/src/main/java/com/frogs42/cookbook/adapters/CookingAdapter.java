@@ -176,17 +176,30 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         if (!isCooking) {
             ((StepsViewHolder) holder).name.setTextAppearance(mContext, R.style.available_step);
             ((StepsViewHolder) holder).left.setVisibility(View.VISIBLE);
+            ((StepsViewHolder) holder).status.setText("");
+            ((StepsViewHolder) holder).status.setVisibility(View.GONE);
         } else {
 
-            if (progress.getStatus(step).equals(Progress.AVAILABLE) || progress.getStatus(step).equals(Progress.RUNNING)) {
+            if (progress.getStatus(step).equals(Progress.AVAILABLE)) {
                 ((StepsViewHolder) holder).name.setTextAppearance(mContext, R.style.available_step);
                 ((StepsViewHolder) holder).description.setTextAppearance(mContext, R.style.available_step);
                 ((StepsViewHolder) holder).left.setVisibility(View.VISIBLE);
+                ((StepsViewHolder) holder).status.setText("");
+                ((StepsViewHolder) holder).status.setVisibility(View.GONE);
+            }
+            if(progress.getStatus(step).equals(Progress.RUNNING)){
+                ((StepsViewHolder) holder).name.setTextAppearance(mContext, R.style.available_step);
+                ((StepsViewHolder) holder).description.setTextAppearance(mContext, R.style.available_step);
+                ((StepsViewHolder) holder).left.setVisibility(View.VISIBLE);
+                ((StepsViewHolder) holder).status.setText("RUNNING");
+                ((StepsViewHolder) holder).status.setVisibility(View.VISIBLE);
             }
             if (progress.getStatus(step).equals(Progress.UNAVAILABLE)) {
                 ((StepsViewHolder) holder).name.setTextAppearance(mContext, R.style.unavailable_step);
                 ((StepsViewHolder) holder).description.setTextAppearance(mContext, R.style.unavailable_step);
                 ((StepsViewHolder) holder).left.setVisibility(View.GONE);
+                ((StepsViewHolder) holder).status.setText("");
+                ((StepsViewHolder) holder).status.setVisibility(View.GONE);
             }
         }
 
@@ -244,8 +257,7 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 if(!progress.getStatus(step).equals(Progress.RUNNING)) {
                     TimersManager.addTimer(step.getId(), 5);//step.getDurationInSeconds());
                     progress.setStatus(step, Progress.RUNNING);
-                    holder.status.setText("RUNNING");
-                    holder.status.setVisibility(View.VISIBLE);
+
                     moveStep(step, progress.getStepsCount(Progress.RUNNING) - 1);
 
                     Snackbar.make(holder.mContainer,mContext.getString(R.string.timer_started),Snackbar.LENGTH_LONG).
@@ -253,8 +265,6 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                                 @Override
                                 public void onClick(View v) {
                                     progress.setStatus(step, Progress.AVAILABLE);
-                                    holder.status.setText("");
-                                    holder.status.setVisibility(View.GONE);
                                     moveStep(step, progress.getStepsCount(Progress.RUNNING));
                                     TimersManager.removeTimer(step.getId());
                                 }
@@ -265,8 +275,6 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 //                    showDialog(step);
                     final int remainingSeconds = TimersManager.getRemainingTime(step.getId());
                     TimersManager.removeTimer(step.getId());
-                    holder.status.setText("");
-                    holder.status.setVisibility(View.GONE);
                     completeStep(step);
 
                     if(progress.getNonCompletedCount() == 0) {
@@ -282,8 +290,6 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                                     progress.setStatus(step, Progress.RUNNING);
                                     lockSteps(step);
                                     TimersManager.addTimer(step.getId(), remainingSeconds);
-                                    holder.status.setText("RUNNING");
-                                    holder.status.setVisibility(View.VISIBLE);
                                     moveStep(step, progressPosition);
 
                                     if(!isCooking){
@@ -343,7 +349,7 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     @Override
     public void onTimerFinished(CookTimer caller){
         Log.e("timer", String.valueOf(caller.getID()) + String.valueOf(caller.getRemainingSeconds()));
-        for(int i = 0; i < progress.getStepsCount(); i++) {
+        for(int i = 0; i < adapter.progress.getStepsCount(); i++) {
             RecipeStep step = progress.getStep(i);
             if (step.getId() == caller.getID()) {
                 completeStep(step);
@@ -415,7 +421,6 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     private void completeStep(RecipeStep step){
         progress.setStatus(step, Progress.COMPLETED);
         unlockSteps();
-        int from = progress.indexOf(step);
         moveStep(step, progress.getNonCompletedCount());
     }
 
