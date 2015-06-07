@@ -23,13 +23,11 @@ public class DataStore {
     private ArrayList<Recipe> mRecipesList;
     private ArrayList<Recipe> mFavouriteRecipesList;
     private HashMap<Recipe,Progress> mActiveRecipesMap = new HashMap<>();
+    private ArrayList<Recipe> mActiveRecipes = new ArrayList<>();
 
 
     private DataStore(Context context) {
         mContext = context;
-
-        mRecipesList = DbAdapter.getRecipesList(mContext);
-
     }
 
     public static void init(Context context) {
@@ -42,36 +40,54 @@ public class DataStore {
     }
 
     public static ArrayList<Recipe> getRecipesList() {
+        assert sInstance != null : "DataStore must be initialized first";
+
+        if (sInstance.mRecipesList == null)
+            sInstance.mRecipesList = DbAdapter.getRecipesList(sInstance.mContext);
+
         return sInstance.mRecipesList;
     }
 
     public static ArrayList<Recipe> getFavouriteRecipesList() {
-        sInstance.mFavouriteRecipesList = DbAdapter.getFavoriteRecipesList(sInstance.mContext);
+        assert sInstance != null : "DataStore must be initialized first";
+
+        if (sInstance.mFavouriteRecipesList == null)
+            sInstance.mFavouriteRecipesList = DbAdapter.getFavoriteRecipesList(sInstance.mContext);
 
         return sInstance.mFavouriteRecipesList;
     }
 
     public static ArrayList<Recipe> getActiveRecipesList() {
-        return new ArrayList<>(sInstance.mActiveRecipesMap.keySet());
+        assert sInstance != null : "DataStore must be initialized first";
+
+        return sInstance.mActiveRecipes;
     }
 
     public static Progress getProgress(Recipe recipe){
+        assert sInstance != null : "DataStore must be initialized first";
+
         return sInstance.mActiveRecipesMap.get(recipe);
     }
 
     public static void addRecipe(Recipe recipe) {
+        assert sInstance != null : "DataStore must be initialized first";
+
         // TODO: save to DB
         sInstance.mRecipesList.add(recipe);
         EventsManager.dispatchEvent(GlobalEvents.EVENT_RECIPE_ADDED, new RecipeHolder(recipe));
     }
 
     public static void removeRecipe(Recipe recipe) {
+        assert sInstance != null : "DataStore must be initialized first";
+
         // TODO: delete from DB
         sInstance.mRecipesList.remove(recipe);
         EventsManager.dispatchEvent(GlobalEvents.EVENT_RECIPE_DELETED, new RecipeHolder(recipe));
     }
 
     public static void makeFavourite(Recipe recipe) {
+        assert sInstance != null : "DataStore must be initialized first";
+
         DbAdapter.updateFavorite(sInstance.mContext, recipe.getId(), true);
         recipe.setFavorite(true);
         sInstance.mFavouriteRecipesList.add(recipe);
@@ -79,6 +95,8 @@ public class DataStore {
     }
 
     public static void makeNonFavourite(Recipe recipe) {
+        assert sInstance != null : "DataStore must be initialized first";
+
         DbAdapter.updateFavorite(sInstance.mContext, recipe.getId(), false);
         recipe.setFavorite(false);
         sInstance.mFavouriteRecipesList.remove(recipe);
@@ -86,12 +104,18 @@ public class DataStore {
     }
 
     public static void onStartCooking(Recipe recipe, Progress progress) {
+        assert sInstance != null : "DataStore must be initialized first";
+
         sInstance.mActiveRecipesMap.put(recipe, progress);
+        sInstance.mActiveRecipes.add(recipe);
         EventsManager.dispatchEvent(GlobalEvents.EVENT_RECIPE_COOKING_STARTED, new RecipeHolder(recipe));
     }
 
     public static void onFinishCooking(Recipe recipe) {
+        assert sInstance != null : "DataStore must be initialized first";
+
         sInstance.mActiveRecipesMap.remove(recipe);
+        sInstance.mActiveRecipes.remove(recipe);
         EventsManager.dispatchEvent(GlobalEvents.EVENT_RECIPE_COOKING_FINISHED, new RecipeHolder(recipe));
     }
 }
