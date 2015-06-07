@@ -18,6 +18,7 @@ import com.frogs42.cookbook.fragments.RecipesListFragment;
 import com.frogs42.cookbook.fragments.TimersListFragment;
 import com.frogs42.cookbook.model.IngredientEntry;
 import com.frogs42.cookbook.model.Recipe;
+import com.frogs42.cookbook.model.RecipeHolder;
 import com.frogs42.cookbook.model.RecipeStep;
 import com.frogs42.cookbook.utils.EventsManager;
 import com.frogs42.cookbook.utils.GlobalEvents;
@@ -112,6 +113,7 @@ public class MainActivity extends ActionBarActivity implements EventsManager.Eve
     @Override
     public void handleEvent(String eventType, Object eventData) {
         if (GlobalEvents.EVENT_RECIPE_SELECTED.equals(eventType)) {
+            Recipe recipe = ((RecipeHolder) eventData).getRecipe();
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.fragments_container, new CookingFragment().setRecipe(recipe))
                     .addToBackStack(null)
