@@ -11,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.frogs42.cookbook.R;
 import com.frogs42.cookbook.data.DataStore;
@@ -225,8 +226,8 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
         position--; //minus header
 
-        if(isCooking && progress.getStatus(progress.getStep(position)).equals(Progress.AVAILABLE) ||
-                progress.getStatus(progress.getStep(position)).equals(Progress.RUNNING))
+        if(isCooking && (progress.getStatus(progress.getStep(position)).equals(Progress.AVAILABLE) ||
+                progress.getStatus(progress.getStep(position)).equals(Progress.RUNNING)))
             return RecyclerViewSwipeManager.REACTION_CAN_SWIPE_BOTH;
         else
             return RecyclerViewSwipeManager.REACTION_CAN_NOT_SWIPE_BOTH_WITH_RUBBER_BAND_EFFECT;
@@ -271,6 +272,7 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                     if(progress.getNonCompletedCount() == 0) {
                         DataStore.onFinishCooking(recipe);
                         isCooking = false;
+                        Toast.makeText(mContext, mContext.getString(R.string.enjoy_your_meal), Toast.LENGTH_SHORT).show();
                     }
 
                     Snackbar.make(holder.mContainer,mContext.getString(R.string.timer_canceled),Snackbar.LENGTH_LONG).
@@ -315,6 +317,7 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             if(progress.getNonCompletedCount() == 0) {
                 DataStore.onFinishCooking(recipe);
                 isCooking = false;
+                Toast.makeText(mContext, mContext.getString(R.string.enjoy_your_meal), Toast.LENGTH_SHORT).show();
             }
 
             Snackbar.make(holder.mContainer,mContext.getString(R.string.completed),Snackbar.LENGTH_LONG).setAction(R.string.undo, new View.OnClickListener() {
@@ -348,6 +351,7 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 if(progress.getNonCompletedCount() == 0) {
                     DataStore.onFinishCooking(recipe);
                     isCooking = false;
+                    Toast.makeText(mContext, mContext.getString(R.string.enjoy_your_meal), Toast.LENGTH_SHORT).show();
                 }
 
                 return;

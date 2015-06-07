@@ -44,8 +44,8 @@ public class RecipesListFragment extends Fragment {
 
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
-                int recipeId = mRecipesList.get(position).getId();
-                Recipe recipe = DbAdapter.getRecipe(getActivity(), recipeId);
+//                int recipeId = mRecipesList.get(position).getId();
+                Recipe recipe = mRecipesList.get(position);//DbAdapter.getRecipe(getActivity(), recipeId);
                 getActivity().getSupportFragmentManager().beginTransaction()
                         .replace(R.id.fragments_container, new CookingFragment().setRecipe(recipe))
                         .commit();

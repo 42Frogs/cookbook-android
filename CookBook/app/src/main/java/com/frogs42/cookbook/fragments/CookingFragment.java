@@ -105,7 +105,6 @@ public class CookingFragment extends Fragment implements EventsManager.EventHand
     public void handleEvent(String eventType, Object eventData) {
         if(eventType.equals(GlobalEvents.EVENT_RECIPE_COOKING_FINISHED)) {
             mFab.setVisibility(View.VISIBLE);
-            Toast.makeText(getActivity(), getString(R.string.enjoy_your_meal), Toast.LENGTH_SHORT).show();
         }else
             mFab.setVisibility(View.GONE);
     }
