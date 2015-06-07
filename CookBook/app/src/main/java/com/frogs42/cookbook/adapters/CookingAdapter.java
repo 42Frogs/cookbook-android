@@ -12,6 +12,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.frogs42.cookbook.R;
+import com.frogs42.cookbook.data.DataStore;
 import com.frogs42.cookbook.model.IngredientEntry;
 import com.frogs42.cookbook.model.Recipe;
 import com.frogs42.cookbook.model.RecipeStep;
@@ -72,6 +73,8 @@ public class CookingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         }
         progress.sort();
         notifyDataSetChanged();
+
+        DataStore.onStartCooking(recipe);
     }
 
     private Recipe getRecipe(){

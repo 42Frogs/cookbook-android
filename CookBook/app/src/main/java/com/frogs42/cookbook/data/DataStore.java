@@ -1,6 +1,7 @@
 package com.frogs42.cookbook.data;
 
 import android.content.Context;
+import android.provider.Settings;
 
 import com.frogs42.cookbook.model.Recipe;
 import com.frogs42.cookbook.model.RecipeHolder;
@@ -75,5 +76,15 @@ public class DataStore {
         // TODO: make non favourite
         sInstance.mFavouriteRecipesList.remove(recipe);
         EventsManager.dispatchEvent(GlobalEvents.EVENT_RECIPE_BECOME_NON_FAVOURITE, new RecipeHolder(recipe));
+    }
+
+    public static void onStartCooking(Recipe recipe) {
+        sInstance.mActiveRecipesList.add(recipe);
+        EventsManager.dispatchEvent(GlobalEvents.EVENT_RECIPE_COOKING_STARTED, new RecipeHolder(recipe));
+    }
+
+    public static void onFinishCooking(Recipe recipe) {
+        sInstance.mActiveRecipesList.remove(recipe);
+        EventsManager.dispatchEvent(GlobalEvents.EVENT_RECIPE_COOKING_FINISHED, new RecipeHolder(recipe));
     }
 }

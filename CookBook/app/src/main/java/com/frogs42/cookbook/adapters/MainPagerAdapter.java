@@ -62,7 +62,8 @@ public class MainPagerAdapter extends PagerAdapter {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Recipe selectedRecipe = finalAdapter.getItem(position);
-                EventsManager.dispatchEvent(GlobalEvents.EVENT_RECIPE_SELECTED, new RecipeHolder(selectedRecipe));
+                if (position == MainPagerFragment.ALL_RECIPES_VIEW || position == MainPagerFragment.FAVOURITE_RECIPES_VIEW)
+                    EventsManager.dispatchEvent(GlobalEvents.EVENT_RECIPE_SELECTED, new RecipeHolder(selectedRecipe));
             }
         });
 
