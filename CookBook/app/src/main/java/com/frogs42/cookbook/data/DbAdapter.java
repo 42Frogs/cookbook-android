@@ -121,9 +121,8 @@ public class DbAdapter {
         Cursor recipeCursor = context.getContentResolver().query(
                 Contract.RecipeEntry.CONTENT_URI,
                 null,
-                Contract.RecipeEntry.FAVORITE + "= ?",
+                Contract.RecipeEntry.FAVORITE + " = ?",
                 new String[]{"1"},
-                null,
                 null);
 
         if(recipeCursor != null) {
